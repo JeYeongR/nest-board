@@ -55,8 +55,8 @@ describe('UserService', () => {
       // Given
       const spyUserExistsByFn = jest.spyOn(mockUserRepository, 'existsBy');
       spyUserExistsByFn.mockResolvedValueOnce(false);
-      const spyJestHashFn = jest.spyOn(bcrypt, 'hash');
-      spyJestHashFn.mockImplementation(() => mockHashedPassword);
+      const spyBcryptHashFn = jest.spyOn(bcrypt, 'hash');
+      spyBcryptHashFn.mockImplementation(() => mockHashedPassword);
       const spyUserCreateFn = jest.spyOn(mockUserRepository, 'create');
       spyUserCreateFn.mockReturnValueOnce(mockUser);
       const spyUserSaveFn = jest.spyOn(mockUserRepository, 'save');
@@ -68,8 +68,8 @@ describe('UserService', () => {
       expect(result).toBeUndefined();
       expect(spyUserExistsByFn).toHaveBeenCalledTimes(1);
       expect(spyUserExistsByFn).toHaveBeenCalledWith({ email });
-      expect(spyJestHashFn).toHaveBeenCalledTimes(1);
-      expect(spyJestHashFn).toHaveBeenCalledWith(password, 10);
+      expect(spyBcryptHashFn).toHaveBeenCalledTimes(1);
+      expect(spyBcryptHashFn).toHaveBeenCalledWith(password, 10);
       expect(spyUserCreateFn).toHaveBeenCalledTimes(1);
       expect(spyUserCreateFn).toHaveBeenCalledWith(mockUser);
       expect(spyUserSaveFn).toHaveBeenCalledTimes(1);
