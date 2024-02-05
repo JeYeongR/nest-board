@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
+import { DoLoginDto } from './dto/do-login.dto';
 import { LoginResponseDto } from './dto/login-resonse.dto';
 
 @Injectable()
@@ -11,7 +12,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async doLogin(email: string, password: string): Promise<any> {
+  async doLogin(doLoginDto: DoLoginDto): Promise<any> {
+    const { email, password } = doLoginDto;
+
     const foundUser = await this.userService.findOneByEmail(email);
     const isMatch = await bcrypt.compare(password, foundUser.password);
     if (!isMatch) throw new UnauthorizedException('INVALID_PASSWORD');
