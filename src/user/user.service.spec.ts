@@ -1,4 +1,8 @@
-import { ConflictException, HttpStatus } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +16,7 @@ describe('UserService', () => {
     existsBy: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    findOneBy: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -90,6 +95,52 @@ describe('UserService', () => {
           error: 'Conflict',
           message: 'EXISTS_EMAIL',
           statusCode: 409,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('findOneByEmail()', () => {
+    const email = 'test@email';
+    const mockUser = {
+      email,
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+
+    it('SUCCESS: 유저를 정상적으로 조회한다.', async () => {
+      // Given
+      const spyUserFindOneByFn = jest.spyOn(mockUserRepository, 'findOneBy');
+      spyUserFindOneByFn.mockResolvedValueOnce(mockUser);
+
+      // When
+      const result = await userService.findOneByEmail(email);
+
+      // Then
+      expect(result).toEqual(mockUser);
+      expect(spyUserFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyUserFindOneByFn).toHaveBeenCalledWith({ email });
+    });
+
+    it('FAILURE: 유저를 찾을 수 없으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyUserFindOneByFn = jest.spyOn(mockUserRepository, 'findOneBy');
+      spyUserFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await userService.findOneByEmail(email);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_USER',
+          statusCode: 404,
         });
       }
       expect(hasThrown).toBeTruthy();
