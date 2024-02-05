@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -10,7 +11,7 @@ import { User } from './user.entity';
 
 @Entity()
 export class Post {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ length: 20 })
@@ -19,6 +20,12 @@ export class Post {
   @Column({ length: 500 })
   content: string;
 
+  @Column({
+    name: 'view_count',
+    default: 0,
+  })
+  viewCount: number;
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
@@ -26,4 +33,7 @@ export class Post {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

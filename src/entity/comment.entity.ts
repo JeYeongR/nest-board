@@ -10,7 +10,7 @@ import {
 @Entity()
 @Tree('closure-table')
 export class Comment {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ length: 20 })

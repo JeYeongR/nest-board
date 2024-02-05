@@ -9,7 +9,7 @@ import { Post } from './post.entity';
 
 @Entity()
 export class Image {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ length: 300 })
