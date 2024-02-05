@@ -33,6 +33,10 @@ describe('UserService', () => {
     userService = module.get<UserService>(UserService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(userService).toBeDefined();
   });
@@ -131,6 +135,52 @@ describe('UserService', () => {
       let hasThrown = false;
       try {
         await userService.findOneByEmail(email);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_USER',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('findOneById()', () => {
+    const id = 1;
+    const mockUser = {
+      email: 'test@email',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+
+    it('SUCCESS: 유저를 정상적으로 조회한다.', async () => {
+      // Given
+      const spyUserFindOneByFn = jest.spyOn(mockUserRepository, 'findOneBy');
+      spyUserFindOneByFn.mockResolvedValueOnce(mockUser);
+
+      // When
+      const result = await userService.findOneById(id);
+
+      // Then
+      expect(result).toEqual(mockUser);
+      expect(spyUserFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyUserFindOneByFn).toHaveBeenCalledWith({ id });
+    });
+
+    it('FAILURE: 유저를 찾을 수 없으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyUserFindOneByFn = jest.spyOn(mockUserRepository, 'findOneBy');
+      spyUserFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await userService.findOneById(id);
 
         // Then
       } catch (error) {
