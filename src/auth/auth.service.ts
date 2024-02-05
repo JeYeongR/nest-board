@@ -12,7 +12,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async doLogin(doLoginDto: DoLoginDto): Promise<any> {
+  async doLogin(doLoginDto: DoLoginDto): Promise<TokenDto> {
     const { email, password } = doLoginDto;
 
     const foundUser = await this.userService.findOneByEmail(email);
@@ -26,11 +26,11 @@ export class AuthService {
     return new TokenDto(accessToken, refreshToken);
   }
 
-  private generateAccessToken(userId: number) {
+  private generateAccessToken(userId: number): string {
     return this.jwtService.sign({ sub: userId }, { expiresIn: '1h' });
   }
 
-  private generateRefreshToken(userId: number) {
+  private generateRefreshToken(userId: number): string {
     return this.jwtService.sign({ sub: userId }, { expiresIn: '7d' });
   }
 }
