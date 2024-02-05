@@ -33,6 +33,10 @@ describe('AuthService', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(authService).toBeDefined();
   });

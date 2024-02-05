@@ -23,6 +23,10 @@ describe('UserController', () => {
     userController = module.get<UserController>(UserController);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(userController).toBeDefined();
   });

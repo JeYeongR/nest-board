@@ -23,6 +23,10 @@ describe('AuthController', () => {
     authController = module.get<AuthController>(AuthController);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(authController).toBeDefined();
   });
