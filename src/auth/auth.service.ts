@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { DoLoginDto } from './dto/do-login.dto';
-import { LoginResponseDto } from './dto/login-resonse.dto';
+import { TokenDto } from './dto/token.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +23,7 @@ export class AuthService {
     const accessToken = this.generateAccessToken(foundUserId);
     const refreshToken = this.generateRefreshToken(foundUserId);
 
-    return new LoginResponseDto(accessToken, refreshToken);
+    return new TokenDto(accessToken, refreshToken);
   }
 
   private generateAccessToken(userId: number) {

@@ -54,7 +54,7 @@ describe('AuthService', () => {
     };
     const mockAccessToken = 'mockAccessToken';
     const mockRefreshToken = 'mockRefreshToken';
-    const mockLoginResponseDto = {
+    const mockTokenDto = {
       accessToken: mockAccessToken,
       refreshToken: mockRefreshToken,
     };
@@ -76,7 +76,7 @@ describe('AuthService', () => {
       const result = await authService.doLogin(doLoginDto);
 
       // Then
-      expect(result).toEqual(mockLoginResponseDto);
+      expect(result).toEqual(mockTokenDto);
       expect(spyUserFindOneByEmailFn).toHaveBeenCalledTimes(1);
       expect(spyUserFindOneByEmailFn).toHaveBeenCalledWith(email);
       expect(spyBcryptCompareFn).toHaveBeenCalledTimes(1);
