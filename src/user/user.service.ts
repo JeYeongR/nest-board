@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -24,5 +28,12 @@ export class UserService {
       password: hashedPassword,
     });
     await this.userRepository.save(user);
+  }
+
+  async findOneByEmail(email: string): Promise<User> {
+    const foundUser = await this.userRepository.findOneBy({ email });
+    if (!foundUser) throw new NotFoundException('NOT_FOUND_USER');
+
+    return foundUser;
   }
 }
