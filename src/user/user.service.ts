@@ -15,7 +15,7 @@ export class UserService {
     const { email, password } = createUserDto;
 
     const exists: boolean = await this.userRepository.existsBy({ email });
-    if (exists) throw new ConflictException();
+    if (exists) throw new ConflictException('EXISTS_EMAIL');
 
     const saltOrRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltOrRounds);
