@@ -22,7 +22,7 @@ export const multerConfig: MulterModuleAsyncOptions = {
       key(req, file, callback) {
         const ext = extname(file.originalname);
         const baseName = basename(file.originalname, ext);
-        const fileName = `review-images/${baseName}-${Date.now()}${ext}`;
+        const fileName = `post-images/${baseName}-${Date.now()}${ext}`;
         callback(null, fileName);
       },
     }),
