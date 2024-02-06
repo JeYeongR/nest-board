@@ -5,6 +5,7 @@ import { multerConfig } from '../config/multer.config';
 import { Category } from '../entity/category.entity';
 import { Image } from '../entity/image.entity';
 import { Post } from '../entity/post.entity';
+import { PostController } from './post.controller';
 import { PostService } from './post.service';
 
 @Module({
@@ -13,5 +14,6 @@ import { PostService } from './post.service';
     TypeOrmModule.forFeature([Post, Category, Image]),
   ],
   providers: [PostService],
+  controllers: [PostController],
 })
 export class PostModule {}
