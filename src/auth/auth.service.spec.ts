@@ -125,4 +125,34 @@ describe('AuthService', () => {
       expect(hasThrown).toBeTruthy();
     });
   });
+
+  describe('reissueAccessToken()', () => {
+    const id = 1;
+    const user = {
+      id: id,
+      email: 'test@email',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+    const mockAccessToken = 'mockAccessToken';
+    const mockTokenDto = {
+      accessToken: mockAccessToken,
+    };
+
+    it('SUCCESS: 엑세스 토큰을 정상적으로 재발급한다.', async () => {
+      // Given
+      const spyJwtServiceSignFn = jest.spyOn(mockJwtService, 'sign');
+      spyJwtServiceSignFn.mockReturnValueOnce(mockAccessToken);
+
+      // When
+      const result = await authService.reissueAccessToken(user);
+
+      // Then
+      expect(result).toEqual(mockTokenDto);
+      expect(spyJwtServiceSignFn).toHaveBeenCalledTimes(1);
+      expect(spyJwtServiceSignFn).toHaveBeenCalledWith(
+        { sub: id },
+        { expiresIn: '1h' },
+      );
+    });
+  });
 });
