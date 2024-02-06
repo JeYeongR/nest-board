@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { User } from '../entity/user.entity';
 import { UserService } from '../user/user.service';
 import { DoLoginDto } from './dto/do-login.dto';
 import { TokenDto } from './dto/token.dto';
@@ -24,6 +25,12 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken(foundUserId);
 
     return new TokenDto(accessToken, refreshToken);
+  }
+
+  async reissueAccessToken(user: User): Promise<TokenDto> {
+    const accessToken = this.generateAccessToken(user.id);
+
+    return new TokenDto(accessToken);
   }
 
   private generateAccessToken(userId: number): string {
