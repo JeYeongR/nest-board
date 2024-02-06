@@ -27,6 +27,10 @@ export class AuthService {
     return new TokenDto(accessToken, refreshToken);
   }
 
+  async verify(token: string) {
+    return await this.jwtService.verifyAsync(token);
+  }
+
   async reissueAccessToken(user: User): Promise<TokenDto> {
     const accessToken = this.generateAccessToken(user.id);
 
