@@ -9,6 +9,7 @@ import {
 import { GetUser } from '../common/decorator/get-user.decorator';
 import { CommonResponseDto } from '../common/dto/common-response.dto';
 import { ResponseMessage } from '../common/dto/response-message.enum';
+import { IsPublic } from '../common/guard/is-public.decorator';
 import { RefreshTokenAuthGuard } from '../common/guard/refresh-token-auth.guard';
 import { User } from '../entity/user.entity';
 import { AuthService } from './auth.service';
@@ -21,6 +22,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/login')
+  @IsPublic()
   async doLogin(
     @Body() doLoginDto: DoLoginDto,
   ): Promise<CommonResponseDto<TokenDto>> {
