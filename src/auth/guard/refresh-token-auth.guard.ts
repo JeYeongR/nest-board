@@ -19,7 +19,8 @@ export class RefreshTokenAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const accessToken = this.extractAccessTokenFromHeader(request);
     const refreshToken = this.extractRefreshTokenFromHeader(request);
-    if (!accessToken || !refreshToken) throw new UnauthorizedException();
+    if (!accessToken || !refreshToken)
+      throw new UnauthorizedException('JWT_MUST_BE_PROVIDED');
 
     try {
       const { sub: id } = await this.authService.verifyToken(refreshToken);
@@ -27,7 +28,7 @@ export class RefreshTokenAuthGuard implements CanActivate {
 
       request.user = foundUser;
     } catch (error) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(error.message);
     }
 
     return true;
