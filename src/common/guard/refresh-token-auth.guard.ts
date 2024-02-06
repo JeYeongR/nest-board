@@ -4,14 +4,14 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { AuthService } from '../../auth/auth.service';
 import { UserService } from '../../user/user.service';
 
 @Injectable()
 export class RefreshTokenAuthGuard implements CanActivate {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly authService: AuthService,
     private readonly userService: UserService,
   ) {}
 
@@ -22,7 +22,7 @@ export class RefreshTokenAuthGuard implements CanActivate {
     if (!accessToken || !refreshToken) throw new UnauthorizedException();
 
     try {
-      const { sub: id } = await this.jwtService.verifyAsync(refreshToken);
+      const { sub: id } = await this.authService.verifyToken(refreshToken);
       const foundUser = await this.userService.findOneById(id);
 
       request.user = foundUser;

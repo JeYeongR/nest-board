@@ -31,7 +31,7 @@ export class AccessTokenAuthGuard implements CanActivate {
     if (!accessToken) throw new UnauthorizedException();
 
     try {
-      const { sub: id } = await this.authService.verify(accessToken);
+      const { sub: id } = await this.authService.verifyToken(accessToken);
       const foundUser = await this.userService.findOneById(id);
 
       request.user = foundUser;

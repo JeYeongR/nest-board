@@ -27,7 +27,7 @@ export class AuthService {
     return new TokenDto(accessToken, refreshToken);
   }
 
-  async verify(token: string) {
+  async verifyToken(token: string) {
     return await this.jwtService.verifyAsync(token);
   }
 
