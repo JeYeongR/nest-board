@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostCategory } from './dto/post-category.enum';
 import { PostController } from './post.controller';
@@ -14,6 +15,7 @@ describe('PostController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PostController],
       providers: [
+        ConfigService,
         {
           provide: PostService,
           useValue: mockPostService,
@@ -22,6 +24,10 @@ describe('PostController', () => {
     }).compile();
 
     postController = module.get<PostController>(PostController);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
