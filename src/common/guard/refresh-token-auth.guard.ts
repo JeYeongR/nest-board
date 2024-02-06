@@ -6,11 +6,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { User } from '../entity/user.entity';
-import { UserService } from '../user/user.service';
+import { UserService } from '../../user/user.service';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class RefreshTokenAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
@@ -20,22 +19,18 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const accessToken = this.extractAccessTokenFromHeader(request);
     const refreshToken = this.extractRefreshTokenFromHeader(request);
+    if (!accessToken || !refreshToken) throw new UnauthorizedException();
 
     try {
-      if (!accessToken) throw new UnauthorizedException();
-
-      let foundUser: User;
-      if (accessToken && refreshToken) {
-        foundUser = await this.getUserFromToken(refreshToken);
-      } else {
-        foundUser = await this.getUserFromToken(accessToken);
-      }
+      const { sub: id } = await this.jwtService.verifyAsync(refreshToken);
+      const foundUser = await this.userService.findOneById(id);
 
       request.user = foundUser;
-      return true;
     } catch (error) {
       throw new UnauthorizedException();
     }
+
+    return true;
   }
 
   private extractAccessTokenFromHeader(request: Request): string | undefined {
@@ -47,11 +42,5 @@ export class AuthGuard implements CanActivate {
     const refreshToken = request.headers.refreshtoken as string;
     const [type, token] = refreshToken?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
-  }
-
-  async getUserFromToken(token: string) {
-    const { sub: id } = await this.jwtService.verifyAsync(token);
-    const foundUser = await this.userService.findOneById(id);
-    return foundUser;
   }
 }
