@@ -43,6 +43,10 @@ describe('PostService', () => {
     postService = module.get<PostService>(PostService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(postService).toBeDefined();
   });
