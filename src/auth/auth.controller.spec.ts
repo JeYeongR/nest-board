@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RefreshTokenAuthGuard } from '../common/guard/refresh-token-auth.guard';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -7,6 +8,7 @@ describe('AuthController', () => {
 
   const mockAuthService = {
     doLogin: jest.fn(),
+    reissueAccessToken: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,7 +20,12 @@ describe('AuthController', () => {
           useValue: mockAuthService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(RefreshTokenAuthGuard)
+      .useValue({
+        canActivate: () => true,
+      })
+      .compile();
 
     authController = module.get<AuthController>(AuthController);
   });
@@ -61,6 +68,41 @@ describe('AuthController', () => {
       expect(result).toEqual(expectedResult);
       expect(spyDoLoginFn).toHaveBeenCalledTimes(1);
       expect(spyDoLoginFn).toHaveBeenCalledWith(doLoginDto);
+    });
+  });
+
+  describe('reissueAccessToken()', () => {
+    const mockAccessToken = 'mockAccessToken';
+    const mockTokenDto = {
+      accessToken: mockAccessToken,
+    };
+    const user = {
+      id: 1,
+      email: 'test@email',
+      password: 'test1234',
+    };
+
+    it('SUCCESS: Auth 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyReissueAccessTokenFn = jest.spyOn(
+        mockAuthService,
+        'reissueAccessToken',
+      );
+      spyReissueAccessTokenFn.mockResolvedValue(mockTokenDto);
+
+      const expectedResult = {
+        message: 'REISSUE_SUCCESS',
+        statusCode: 200,
+        data: mockTokenDto,
+      };
+
+      // When
+      const result = await authController.reissueAccessToken(user);
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyReissueAccessTokenFn).toHaveBeenCalledTimes(1);
+      expect(spyReissueAccessTokenFn).toHaveBeenCalledWith(user);
     });
   });
 });
