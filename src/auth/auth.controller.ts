@@ -7,9 +7,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GetUser } from '../common/decorator/get-user.decorator';
+import { IsPublic } from '../common/decorator/is-public.decorator';
 import { CommonResponseDto } from '../common/dto/common-response.dto';
 import { ResponseMessage } from '../common/dto/response-message.enum';
-import { IsPublic } from '../common/guard/is-public.decorator';
 import { RefreshTokenAuthGuard } from '../common/guard/refresh-token-auth.guard';
 import { User } from '../entity/user.entity';
 import { AuthService } from './auth.service';
