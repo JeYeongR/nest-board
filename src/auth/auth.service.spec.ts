@@ -13,6 +13,7 @@ describe('AuthService', () => {
   };
   const mockJwtService = {
     sign: jest.fn(),
+    verifyAsync: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -123,6 +124,29 @@ describe('AuthService', () => {
         });
       }
       expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('verify()', () => {
+    const id = 1;
+    const mockToken = 'mockToken';
+    const mockClaims = { sub: id };
+
+    it('SUCCESS: 토큰에서 정상적으로 Claims을 꺼내온다.', async () => {
+      // Given
+      const spyJwtServiceVerifyAsyncFn = jest.spyOn(
+        mockJwtService,
+        'verifyAsync',
+      );
+      spyJwtServiceVerifyAsyncFn.mockReturnValueOnce(mockClaims);
+
+      // When
+      const result = await authService.verifyToken(mockToken);
+
+      // Then
+      expect(result).toEqual(mockClaims);
+      expect(spyJwtServiceVerifyAsyncFn).toHaveBeenCalledTimes(1);
+      expect(spyJwtServiceVerifyAsyncFn).toHaveBeenCalledWith(mockToken);
     });
   });
 
