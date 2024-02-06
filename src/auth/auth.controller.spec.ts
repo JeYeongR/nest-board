@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RefreshTokenAuthGuard } from '../common/guard/refresh-token-auth.guard';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RefreshTokenAuthGuard } from './guard/refresh-token-auth.guard';
 
 describe('AuthController', () => {
   let authController: AuthController;

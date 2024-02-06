@@ -4,25 +4,34 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { AuthService } from '../../auth/auth.service';
+import { IS_PUBLIC_KEY } from '../../common/decorator/is-public.decorator';
 import { UserService } from '../../user/user.service';
+import { AuthService } from '../auth.service';
 
 @Injectable()
-export class RefreshTokenAuthGuard implements CanActivate {
+export class AccessTokenAuthGuard implements CanActivate {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
+    private reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) return true;
+
     const request = context.switchToHttp().getRequest();
     const accessToken = this.extractAccessTokenFromHeader(request);
-    const refreshToken = this.extractRefreshTokenFromHeader(request);
-    if (!accessToken || !refreshToken) throw new UnauthorizedException();
+    if (!accessToken) throw new UnauthorizedException();
 
     try {
-      const { sub: id } = await this.authService.verifyToken(refreshToken);
+      const { sub: id } = await this.authService.verifyToken(accessToken);
       const foundUser = await this.userService.findOneById(id);
 
       request.user = foundUser;
@@ -35,12 +44,6 @@ export class RefreshTokenAuthGuard implements CanActivate {
 
   private extractAccessTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
-
-  private extractRefreshTokenFromHeader(request: Request): string | undefined {
-    const refreshToken = request.headers.refreshtoken as string;
-    const [type, token] = refreshToken?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 }

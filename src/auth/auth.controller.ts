@@ -10,11 +10,11 @@ import { GetUser } from '../common/decorator/get-user.decorator';
 import { IsPublic } from '../common/decorator/is-public.decorator';
 import { CommonResponseDto } from '../common/dto/common-response.dto';
 import { ResponseMessage } from '../common/dto/response-message.enum';
-import { RefreshTokenAuthGuard } from '../common/guard/refresh-token-auth.guard';
 import { User } from '../entity/user.entity';
 import { AuthService } from './auth.service';
 import { DoLoginDto } from './dto/do-login.dto';
 import { TokenDto } from './dto/token.dto';
+import { RefreshTokenAuthGuard } from './guard/refresh-token-auth.guard';
 
 @Controller('/auth')
 export class AuthController {
