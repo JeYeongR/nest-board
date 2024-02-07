@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -10,6 +10,10 @@ export class User {
     unique: true,
   })
   email: string;
+
+  @Index({ fulltext: true, parser: 'ngram' })
+  @Column({ length: 10 })
+  nickname: string;
 
   @Column({ length: 100 })
   password: string;
