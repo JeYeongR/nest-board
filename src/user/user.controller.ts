@@ -1,4 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { IsPublic } from '../common/decorator/is-public.decorator';
 import { CommonResponseDto } from '../common/dto/common-response.dto';
 import { ResponseMessage } from '../common/dto/response-message.enum';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,6 +10,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @IsPublic()
   async createUser(
     @Body() createUserDto: CreateUserDto,
   ): Promise<CommonResponseDto<void>> {

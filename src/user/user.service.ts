@@ -16,7 +16,7 @@ export class UserService {
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<void> {
-    const { email, password } = createUserDto;
+    const { email, password, nickname } = createUserDto;
 
     const exists: boolean = await this.userRepository.existsBy({ email });
     if (exists) throw new ConflictException('EXISTS_EMAIL');
@@ -25,6 +25,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, saltOrRounds);
     const user = this.userRepository.create({
       email,
+      nickname,
       password: hashedPassword,
     });
     await this.userRepository.save(user);
