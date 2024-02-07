@@ -55,7 +55,7 @@ export class PostService {
   }
 
   async getPosts(getPostDto: GetPostDto, userId: number) {
-    const { category, keyword, criteria, pageNo } = getPostDto;
+    const { category, keyword, criteria, sort, period, pageNo } = getPostDto;
     const foundCategory = await this.categoryRepository.findOneBy({
       name: category,
     });
@@ -87,8 +87,8 @@ export class PostService {
       }
     }
 
-    if (getPostDto.sort === PostSort.POPULARITY) {
-      const date = this.calculateStartDate(getPostDto.period);
+    if (sort === PostSort.POPULARITY) {
+      const date = this.calculateStartDate(period);
       if (date) qb.andWhere('p.created_at >= :date', { date });
 
       qb.orderBy({
