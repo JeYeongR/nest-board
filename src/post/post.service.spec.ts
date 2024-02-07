@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from '../entity/category.entity';
 import { Image } from '../entity/image.entity';
 import { Post } from '../entity/post.entity';
-import { PostCategory } from './dto/post-category.enum';
+import { PostCategory } from './enum/post-category.enum';
 import { PostService } from './post.service';
 
 describe('PostService', () => {
@@ -68,6 +68,7 @@ describe('PostService', () => {
     const user = {
       id: 1,
       email: 'test@email',
+      nickname: 'test',
       password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
     };
     const mockPost = {

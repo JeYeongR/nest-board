@@ -34,6 +34,7 @@ describe('UserController', () => {
   describe('createUser()', () => {
     const createDto = {
       email: 'test@email',
+      nickname: 'test',
       password: 'test1234',
     };
 

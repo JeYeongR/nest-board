@@ -155,6 +155,7 @@ describe('AuthService', () => {
     const user = {
       id: id,
       email: 'test@email',
+      nickname: 'test',
       password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
     };
     const mockAccessToken = 'mockAccessToken';

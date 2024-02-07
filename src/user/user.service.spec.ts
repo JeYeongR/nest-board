@@ -43,15 +43,18 @@ describe('UserService', () => {
 
   describe('createUser()', () => {
     const email = 'test@email';
+    const nickname = 'test';
     const password = 'test1234';
     const createDto = {
       email,
+      nickname,
       password,
     };
     const mockHashedPassword: string =
       '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO';
     const mockUser = {
       email,
+      nickname,
       password: mockHashedPassword,
     };
 

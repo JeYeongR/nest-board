@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PostCategory } from './dto/post-category.enum';
+import { PostCategory } from './enum/post-category.enum';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
 
@@ -38,6 +38,7 @@ describe('PostController', () => {
     const user = {
       id: 1,
       email: 'test@email',
+      nickname: 'test',
       password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
     };
     const images = [{ location: 'test.com' }];

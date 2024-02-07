@@ -79,6 +79,7 @@ describe('AuthController', () => {
     const user = {
       id: 1,
       email: 'test@email',
+      nickname: 'test',
       password: 'test1234',
     };
 
