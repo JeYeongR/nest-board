@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, MaxLength } from 'class-validator';
-import { PostCategory } from './post-category.enum';
+import { PostCategory } from '../enum/post-category.enum';
 
 export class CreatePostDto {
   @IsNotEmpty()
