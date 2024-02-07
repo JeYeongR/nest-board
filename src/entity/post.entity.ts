@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -16,6 +17,7 @@ export class Post {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
+  @Index({ fulltext: true, parser: 'ngram' })
   @Column({ length: 20 })
   title: string;
 
