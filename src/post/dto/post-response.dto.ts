@@ -1,5 +1,5 @@
-import { UserResponseDto } from '../../user/dto/user-response.dto';
 import { Post } from '../../entity/post.entity';
+import { UserResponseDto } from '../../user/dto/user-response.dto';
 
 export class PostResponseDto {
   private id: number;
@@ -14,7 +14,7 @@ export class PostResponseDto {
 
   private isMyPost: boolean;
 
-  constructor(post: Post, userId: number) {
+  constructor(post: Post, userId?: number) {
     this.id = post.id;
     this.title = post.title;
     this.viewCount = post.viewCount;
