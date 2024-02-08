@@ -54,6 +54,7 @@ export class PostService {
     await this.postRepository.save(post);
   }
 
+  // TODO: 시간 남으면 리팩터링하기
   async getPosts(
     getPostDto: GetPostDto,
     userId: number,
@@ -110,9 +111,9 @@ export class PostService {
     if (foundPostTotalPage < pageNo)
       throw new BadRequestException('PAGE_OUT_OF_RANGE');
 
-    const posts = await qb.getMany();
+    const foundPosts = await qb.getMany();
 
-    const postResponseDtos = posts.map(
+    const postResponseDtos = foundPosts.map(
       (post) => new PostResponseDto(post, userId),
     );
 
