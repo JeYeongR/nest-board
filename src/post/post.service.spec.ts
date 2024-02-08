@@ -461,8 +461,8 @@ describe('PostService', () => {
           return 10;
         },
       };
-      const mockPosts = [mockPost1];
-      const mockPostResponseDtos = [mockPostResponseDto1];
+      const mockPosts = [mockPost2, mockPost1];
+      const mockPostResponseDtos = [mockPostResponseDto2, mockPostResponseDto1];
       const spyCategoryFindOneByFn = jest.spyOn(
         mockCategoryRepository,
         'findOneBy',
