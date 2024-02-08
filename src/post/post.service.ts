@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PageResponseDto } from '../common/dto/page-response.dto';
 import { Category } from '../entity/category.entity';
 import { Image } from '../entity/image.entity';
@@ -14,6 +14,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostDto } from './dto/get-post.dto';
 import { PostDetailResponseDto } from './dto/post-detail-response.dto';
 import { PostResponseDto } from './dto/post-response.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { PostCriteria } from './enum/post-criteria.enum';
 import { PostPeriod } from './enum/post-period.enum';
 import { PostSort } from './enum/post-sort.enum';
@@ -27,6 +28,7 @@ export class PostService {
     private readonly categoryRepository: Repository<Category>,
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createPost(
@@ -41,9 +43,7 @@ export class PostService {
     });
     if (!foundCategory) throw new NotFoundException('NOT_FOUND_CATEGORY');
 
-    const imageEntities = images.map((image) =>
-      this.imageRepository.create({ url: image.location }),
-    );
+    const imageEntities = this.mapImageDtoToEntity(images);
     const post = this.postRepository.create({
       title,
       content,
@@ -154,5 +154,47 @@ export class PostService {
     await this.postRepository.save(foundPost);
 
     return new PostDetailResponseDto(foundPost, userId);
+  }
+
+  async updatePost(
+    postId: number,
+    user: User,
+    images: Express.MulterS3.File[],
+    updatePostDto: UpdatePostDto,
+  ): Promise<void> {
+    const foundPost = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        user: { id: user.id },
+      },
+      relations: { images: true },
+    });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    const foundImages = foundPost.images;
+    const imageEntities = this.mapImageDtoToEntity(images);
+    const { title, content } = updatePostDto;
+    foundPost.images = imageEntities;
+    foundPost.user = user;
+    foundPost.title = title;
+    foundPost.content = content;
+
+    this.dataSource.transaction(async (entityManager) => {
+      await entityManager.save(foundPost);
+
+      await Promise.all(
+        foundImages.map(
+          async (image) => await entityManager.delete(Image, image.id),
+        ),
+      );
+    });
+
+    // s3 이미지 삭제 넣기
+  }
+
+  private mapImageDtoToEntity(images: Express.MulterS3.File[]) {
+    return images.map((image) =>
+      this.imageRepository.create({ url: image.location }),
+    );
   }
 }
