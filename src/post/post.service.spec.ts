@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Category } from '../entity/category.entity';
 import { Image } from '../entity/image.entity';
 import { Post } from '../entity/post.entity';
@@ -38,6 +39,9 @@ describe('PostService', () => {
   const mockImageRepository = {
     create: jest.fn(),
   };
+  const mockDataSource = {
+    transaction: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -54,6 +58,10 @@ describe('PostService', () => {
         {
           provide: getRepositoryToken(Image),
           useValue: mockImageRepository,
+        },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
         },
       ],
     }).compile();
