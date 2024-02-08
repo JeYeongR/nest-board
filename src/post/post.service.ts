@@ -54,7 +54,10 @@ export class PostService {
     await this.postRepository.save(post);
   }
 
-  async getPosts(getPostDto: GetPostDto, userId: number) {
+  async getPosts(
+    getPostDto: GetPostDto,
+    userId: number,
+  ): Promise<PageResponseDto<PostResponseDto>> {
     const { category, keyword, criteria, sort, period, pageNo } = getPostDto;
     const foundCategory = await this.categoryRepository.findOneBy({
       name: category,
