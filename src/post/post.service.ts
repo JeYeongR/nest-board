@@ -58,7 +58,6 @@ export class PostService {
   // TODO: 시간 남으면 리팩터링하기
   async getPosts(
     getPostDto: GetPostDto,
-    userId: number,
   ): Promise<PageResponseDto<PostResponseDto>> {
     const { category, keyword, criteria, sort, period, pageNo } = getPostDto;
     const foundCategory = await this.categoryRepository.findOneBy({
@@ -115,7 +114,7 @@ export class PostService {
     const foundPosts = await qb.getMany();
 
     const postResponseDtos = foundPosts.map(
-      (post) => new PostResponseDto(post, userId),
+      (post) => new PostResponseDto(post),
     );
 
     return new PageResponseDto(pageNo, foundPostCount, limit, postResponseDtos);

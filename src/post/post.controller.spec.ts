@@ -87,20 +87,13 @@ describe('PostController', () => {
         return 10;
       },
     };
-    const user = {
-      id: 1,
-      email: 'test@email',
-      nickname: 'test',
-      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
-    };
     const mockPostResponseDtos = [
       {
         id: 1,
         title: '치킨',
         viewCount: 1,
         createdAt: new Date(),
-        isMyPost: true,
-        userDto: {
+        user: {
           id: 1,
           nickname: '사과',
         },
@@ -126,12 +119,12 @@ describe('PostController', () => {
       };
 
       // When
-      const result = await postController.getPosts(getPostDto, user);
+      const result = await postController.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
       expect(spyGetPostsFn).toHaveBeenCalledTimes(1);
-      expect(spyGetPostsFn).toHaveBeenCalledWith(getPostDto, user.id);
+      expect(spyGetPostsFn).toHaveBeenCalledWith(getPostDto);
     });
   });
 });

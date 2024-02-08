@@ -174,7 +174,6 @@ describe('PostService', () => {
       id: 1,
     };
     const postCount = 2;
-    const userId = 1;
     const date = new Date();
     const mockDate1 = date.toISOString();
     const mockDate2 = date.setMonth(date.getMonth() - 1);
@@ -205,8 +204,7 @@ describe('PostService', () => {
       title: '치킨',
       viewCount: 1,
       createdAt: mockDate1,
-      isMyPost: true,
-      userDto: {
+      user: {
         id: 1,
         nickname: '사과',
       },
@@ -216,8 +214,7 @@ describe('PostService', () => {
       title: '피자',
       viewCount: 2,
       createdAt: mockDate2,
-      isMyPost: false,
-      userDto: {
+      user: {
         id: 2,
         nickname: '수박',
       },
@@ -264,7 +261,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -336,7 +333,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -414,7 +411,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -490,7 +487,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -563,7 +560,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -639,7 +636,7 @@ describe('PostService', () => {
       };
 
       // When
-      const result = await postService.getPosts(getPostDto, userId);
+      const result = await postService.getPosts(getPostDto);
 
       // Then
       expect(result).toEqual(expectedResult);
@@ -694,7 +691,7 @@ describe('PostService', () => {
       // When
       let hasThrown = false;
       try {
-        await postService.getPosts(getPostDto, userId);
+        await postService.getPosts(getPostDto);
 
         // Then
       } catch (error) {
@@ -736,7 +733,7 @@ describe('PostService', () => {
       // When
       let hasThrown = false;
       try {
-        await postService.getPosts(getPostDto, userId);
+        await postService.getPosts(getPostDto);
 
         // Then
       } catch (error) {

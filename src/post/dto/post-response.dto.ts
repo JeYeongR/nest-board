@@ -10,16 +10,13 @@ export class PostResponseDto {
 
   private createdAt: Date;
 
-  private userDto: UserResponseDto;
+  private user: UserResponseDto;
 
-  private isMyPost: boolean;
-
-  constructor(post: Post, userId?: number) {
+  constructor(post: Post) {
     this.id = post.id;
     this.title = post.title;
     this.viewCount = post.viewCount;
     this.createdAt = post.createdAt;
-    this.userDto = new UserResponseDto(post.user);
-    this.isMyPost = post.user.id === userId;
+    this.user = new UserResponseDto(post.user);
   }
 }

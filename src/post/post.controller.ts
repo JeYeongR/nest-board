@@ -42,9 +42,8 @@ export class PostController {
   @IsPublic()
   async getPosts(
     @Query() getPostDto: GetPostDto,
-    @GetUser() user?: User,
   ): Promise<CommonResponseDto<PageResponseDto<PostResponseDto>>> {
-    const result = await this.postService.getPosts(getPostDto, user?.id);
+    const result = await this.postService.getPosts(getPostDto);
 
     return CommonResponseDto.success<PageResponseDto<PostResponseDto>>(
       ResponseMessage.READ_SUCCESS,
