@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   UploadedFiles,
@@ -17,6 +19,7 @@ import { ResponseMessage } from '../common/dto/response-message.enum';
 import { User } from '../entity/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostDto } from './dto/get-post.dto';
+import { PostDetailResponseDto } from './dto/post-detail-response.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostExceptionFilter } from './filter/post-exception.filter';
 import { PostService } from './post.service';
@@ -46,6 +49,19 @@ export class PostController {
     const result = await this.postService.getPosts(getPostDto);
 
     return CommonResponseDto.success<PageResponseDto<PostResponseDto>>(
+      ResponseMessage.READ_SUCCESS,
+    ).setData(result);
+  }
+
+  @Get('/:postId')
+  @IsPublic()
+  async getPostDetail(
+    @Param('postId', ParseIntPipe) postId: number,
+    @GetUser() user?: User,
+  ): Promise<CommonResponseDto<PostDetailResponseDto>> {
+    const result = await this.postService.getPostDetail(postId, user?.id);
+
+    return CommonResponseDto.success<PostDetailResponseDto>(
       ResponseMessage.READ_SUCCESS,
     ).setData(result);
   }
