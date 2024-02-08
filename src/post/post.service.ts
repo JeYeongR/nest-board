@@ -120,21 +120,6 @@ export class PostService {
     return new PageResponseDto(pageNo, foundPostCount, limit, postResponseDtos);
   }
 
-  private calculateStartDate(period: PostPeriod): Date | null {
-    const date = new Date();
-    if (period === PostPeriod.ONE_YEAR) {
-      date.setFullYear(date.getFullYear() - 1);
-    } else if (period === PostPeriod.ONE_MONTH) {
-      date.setMonth(date.getMonth() - 1);
-    } else if (period === PostPeriod.ONE_WEEK) {
-      date.setDate(date.getDate() - 7);
-    } else {
-      return null;
-    }
-
-    return date;
-  }
-
   async getPostDetail(
     postId: number,
     userId?: number,
@@ -190,6 +175,21 @@ export class PostService {
     });
 
     // s3 이미지 삭제 넣기
+  }
+
+  private calculateStartDate(period: PostPeriod): Date | null {
+    const date = new Date();
+    if (period === PostPeriod.ONE_YEAR) {
+      date.setFullYear(date.getFullYear() - 1);
+    } else if (period === PostPeriod.ONE_MONTH) {
+      date.setMonth(date.getMonth() - 1);
+    } else if (period === PostPeriod.ONE_WEEK) {
+      date.setDate(date.getDate() - 7);
+    } else {
+      return null;
+    }
+
+    return date;
   }
 
   private mapImageDtoToEntity(images: Express.MulterS3.File[]) {
