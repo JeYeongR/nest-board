@@ -30,6 +30,7 @@ describe('PostService', () => {
       getCount: jest.fn(),
       getMany: jest.fn(),
     })),
+    findOne: jest.fn(),
   };
   const mockCategoryRepository = {
     findOneBy: jest.fn(),
@@ -744,6 +745,131 @@ describe('PostService', () => {
           error: 'Bad Request',
           message: 'PAGE_OUT_OF_RANGE',
           statusCode: 400,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('getPostDetail()', () => {
+    const postId = 1;
+    const userId = 1;
+    const date = new Date();
+    const mockPost = {
+      id: postId,
+      title: 'test',
+      content: 'test',
+      viewCount: 0,
+      createdAt: date,
+      user: {
+        id: 1,
+        email: 'test@email',
+        nickname: 'test',
+        password:
+          '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+      },
+      images: [
+        {
+          id: userId,
+          url: 'test.test.com',
+        },
+      ],
+      category: {
+        id: 1,
+        name: PostCategory.NOTICE,
+      },
+    };
+    const mockPostIncreasedViewCount = {
+      id: postId,
+      title: 'test',
+      content: 'test',
+      viewCount: 1,
+      createdAt: date,
+      user: {
+        id: 1,
+        email: 'test@email',
+        nickname: 'test',
+        password:
+          '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+      },
+      images: [
+        {
+          id: userId,
+          url: 'test.test.com',
+        },
+      ],
+      category: {
+        id: 1,
+        name: PostCategory.NOTICE,
+      },
+    };
+
+    it('SUCCESS: 글 상세를 정상적으로 조회한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(mockPost);
+      const spyPostSaveFn = jest.spyOn(mockPostRepository, 'save');
+
+      const expectedResult = {
+        id: 1,
+        title: 'test',
+        content: 'test',
+        viewCount: 1,
+        createdAt: date,
+        user: {
+          id: 1,
+          nickname: 'test',
+        },
+        image: [
+          {
+            id: 1,
+            url: 'test.test.com',
+          },
+        ],
+        category: {
+          id: 1,
+          name: 'notice',
+        },
+        isMyPost: true,
+      };
+
+      // When
+      const result = await postService.getPostDetail(postId, userId);
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyPostFindOneFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneFn).toHaveBeenCalledWith({
+        where: { id: postId },
+        relations: {
+          user: true,
+          category: true,
+          images: true,
+        },
+      });
+      expect(spyPostSaveFn).toHaveBeenCalledTimes(1);
+      expect(spyPostSaveFn).toHaveBeenCalledWith(mockPostIncreasedViewCount);
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await postService.getPostDetail(postId, userId);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
         });
       }
       expect(hasThrown).toBeTruthy();
