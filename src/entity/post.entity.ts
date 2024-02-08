@@ -34,7 +34,7 @@ export class Post {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Category, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
