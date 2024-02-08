@@ -12,6 +12,7 @@ import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostDto } from './dto/get-post.dto';
+import { PostDetailResponseDto } from './dto/post-detail-response.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostCriteria } from './enum/post-criteria.enum';
 import { PostPeriod } from './enum/post-period.enum';
@@ -133,5 +134,26 @@ export class PostService {
     }
 
     return date;
+  }
+
+  async getPostDetail(
+    postId: number,
+    userId?: number,
+  ): Promise<PostDetailResponseDto> {
+    const foundPost = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: {
+        user: true,
+        category: true,
+        images: true,
+      },
+    });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    foundPost.viewCount++;
+
+    await this.postRepository.save(foundPost);
+
+    return new PostDetailResponseDto(foundPost, userId);
   }
 }
