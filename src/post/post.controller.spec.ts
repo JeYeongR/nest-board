@@ -50,7 +50,7 @@ describe('PostController', () => {
 
     it('SUCCESS: 포스트 서비스를 정상적으로 호출한다.', async () => {
       // Given
-      const spyCreateUserFn = jest.spyOn(mockPostService, 'createPost');
+      const spyCreatePostFn = jest.spyOn(mockPostService, 'createPost');
 
       const expectedResult = {
         message: 'CREATE_SUCCESS',
@@ -66,8 +66,8 @@ describe('PostController', () => {
 
       // Then
       expect(result).toEqual(expectedResult);
-      expect(spyCreateUserFn).toHaveBeenCalledTimes(1);
-      expect(spyCreateUserFn).toHaveBeenCalledWith(
+      expect(spyCreatePostFn).toHaveBeenCalledTimes(1);
+      expect(spyCreatePostFn).toHaveBeenCalledWith(
         user,
         images as Express.MulterS3.File[],
         createPostDto,
