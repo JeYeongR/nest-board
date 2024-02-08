@@ -10,6 +10,7 @@ describe('PostController', () => {
   const mockPostService = {
     createPost: jest.fn(),
     getPosts: jest.fn(),
+    getPostDetail: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -125,6 +126,58 @@ describe('PostController', () => {
       expect(result).toEqual(expectedResult);
       expect(spyGetPostsFn).toHaveBeenCalledTimes(1);
       expect(spyGetPostsFn).toHaveBeenCalledWith(getPostDto);
+    });
+  });
+
+  describe('getPostDetail()', () => {
+    const postId = 1;
+    const user = {
+      id: 1,
+      email: 'test@email',
+      nickname: 'test',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+    const mockPostDetailResponseDto = {
+      id: 1,
+      title: 'test',
+      content: 'test',
+      viewCount: 1,
+      createdAt: new Date(),
+      category: {
+        id: 1,
+        name: PostCategory.NOTICE,
+      },
+      user: {
+        id: 1,
+        nickname: 'test',
+      },
+      image: [
+        {
+          id: 1,
+          url: 'test.test.com',
+        },
+      ],
+      isMyPost: false,
+    };
+
+    it('SUCCESS: 포스트 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyGetPostDetailFn = jest.spyOn(mockPostService, 'getPostDetail');
+      spyGetPostDetailFn.mockResolvedValueOnce(mockPostDetailResponseDto);
+
+      const expectedResult = {
+        message: 'READ_SUCCESS',
+        statusCode: 200,
+        data: mockPostDetailResponseDto,
+      };
+
+      // When
+      const result = await postController.getPostDetail(postId, user);
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyGetPostDetailFn).toHaveBeenCalledTimes(1);
+      expect(spyGetPostDetailFn).toHaveBeenCalledWith(postId, user.id);
     });
   });
 });
