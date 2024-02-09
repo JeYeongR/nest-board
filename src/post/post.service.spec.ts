@@ -896,7 +896,6 @@ describe('PostService', () => {
     const userId = 1;
     const images = [
       {
-        key: 'test',
         location: 'updateTest.test.com',
       },
     ];
