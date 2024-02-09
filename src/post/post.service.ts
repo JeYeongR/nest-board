@@ -18,6 +18,8 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PostCriteria } from './enum/post-criteria.enum';
 import { PostPeriod } from './enum/post-period.enum';
 import { PostSort } from './enum/post-sort.enum';
+import { ImageService } from './image.service';
+import { CustomMulterFile } from './type/custom-multer-file.type';
 
 @Injectable()
 export class PostService {
@@ -26,14 +28,13 @@ export class PostService {
     private readonly postRepository: Repository<Post>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
-    @InjectRepository(Image)
-    private readonly imageRepository: Repository<Image>,
+    private readonly imageService: ImageService,
     private readonly dataSource: DataSource,
   ) {}
 
   async createPost(
     user: User,
-    images: Express.MulterS3.File[],
+    images: CustomMulterFile[],
     createPostDto: CreatePostDto,
   ): Promise<void> {
     const { title, content, category } = createPostDto;
@@ -43,7 +44,7 @@ export class PostService {
     });
     if (!foundCategory) throw new NotFoundException('NOT_FOUND_CATEGORY');
 
-    const imageEntities = this.mapImageDtoToEntity(images);
+    const imageEntities = this.mapImageFileToEntity(images);
     const post = this.postRepository.create({
       title,
       content,
@@ -144,7 +145,7 @@ export class PostService {
   async updatePost(
     postId: number,
     user: User,
-    images: Express.MulterS3.File[],
+    images: CustomMulterFile[],
     updatePostDto: UpdatePostDto,
   ): Promise<void> {
     const foundPost = await this.postRepository.findOne({
@@ -157,7 +158,7 @@ export class PostService {
     if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
 
     const foundImages = foundPost.images;
-    const imageEntities = this.mapImageDtoToEntity(images);
+    const imageEntities = this.mapImageFileToEntity(images);
     const { title, content } = updatePostDto;
     foundPost.images = imageEntities;
     foundPost.user = user;
@@ -168,13 +169,16 @@ export class PostService {
       await entityManager.save(foundPost);
 
       await Promise.all(
-        foundImages.map(
-          async (image) => await entityManager.delete(Image, image.id),
-        ),
+        foundImages.map((image) => entityManager.delete(Image, image.id)),
       );
     });
 
-    // s3 이미지 삭제 넣기
+    await Promise.all(
+      foundImages.map((image) => {
+        const key = image.url.substring(this.imageService.s3Url.length + 1);
+        this.imageService.deleteImageOnS3(key);
+      }),
+    );
   }
 
   private calculateStartDate(period: PostPeriod): Date | null {
@@ -192,9 +196,7 @@ export class PostService {
     return date;
   }
 
-  private mapImageDtoToEntity(images: Express.MulterS3.File[]) {
-    return images.map((image) =>
-      this.imageRepository.create({ url: image.location }),
-    );
+  private mapImageFileToEntity(images: CustomMulterFile[]) {
+    return images.map((image) => this.imageService.createImage(image));
   }
 }

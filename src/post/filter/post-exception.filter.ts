@@ -1,16 +1,16 @@
-import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
+import { ImageService } from '../image.service';
+import { CustomMulterFile } from '../type/custom-multer-file.type';
 
 @Catch(HttpException)
 export class PostExceptionFilter implements ExceptionFilter {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly imageService: ImageService) {}
 
   async catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -21,7 +21,7 @@ export class PostExceptionFilter implements ExceptionFilter {
     const errorResponse = exception.getResponse();
 
     if (Array.isArray(files) && files.length !== 0) {
-      await this.deleteFiles(files as Express.MulterS3.File[]);
+      await this.deleteFiles(files as CustomMulterFile[]);
     }
 
     if (typeof errorResponse === 'object') {
@@ -36,24 +36,10 @@ export class PostExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private async deleteFiles(files: Express.MulterS3.File[]) {
-    const s3 = new S3Client({
-      region: this.configService.get('AWS_S3_REGION'),
-      credentials: {
-        accessKeyId: this.configService.get('AWS_S3_ACCESS_KEY'),
-        secretAccessKey: this.configService.get('AWS_S3_SECRET_ACCESS_KEY'),
-      },
-    });
-
+  private async deleteFiles(files: CustomMulterFile[]) {
     await Promise.all(
       files.map((file) => {
-        const deleteParams = {
-          Bucket: this.configService.get('AWS_S3_BUCKET'),
-          Key: file.key,
-        };
-        const input = new DeleteObjectCommand(deleteParams);
-
-        s3.send(input);
+        this.imageService.deleteImageOnS3(file.key);
       }),
     );
   }

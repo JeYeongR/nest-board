@@ -10,7 +10,6 @@ import {
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { GetUser } from '../common/decorator/get-user.decorator';
 import { IsPublic } from '../common/decorator/is-public.decorator';
 import { CommonResponseDto } from '../common/dto/common-response.dto';
@@ -22,18 +21,20 @@ import { GetPostDto } from './dto/get-post.dto';
 import { PostDetailResponseDto } from './dto/post-detail-response.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostExceptionFilter } from './filter/post-exception.filter';
+import { ImageInterceptor } from './interceptor/image.interceptor';
 import { PostService } from './post.service';
+import { CustomMulterFile } from './type/custom-multer-file.type';
 
 @Controller('/posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
-  @UseInterceptors(FilesInterceptor('images'))
+  @UseInterceptors(ImageInterceptor)
   @UseFilters(PostExceptionFilter)
   async createPost(
     @GetUser() user: User,
-    @UploadedFiles() images: Express.MulterS3.File[],
+    @UploadedFiles() images: CustomMulterFile[],
     @Body() createPostDto: CreatePostDto,
   ): Promise<CommonResponseDto<void>> {
     await this.postService.createPost(user, images, createPostDto);
