@@ -9,6 +9,7 @@ import { AccessTokenAuthGuard } from './auth/guard/access-token-auth.guard';
 import { typeOrmConfig } from './config/type-orm.config';
 import { PostModule } from './post/post.module';
 import { UserModule } from './user/user.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     AuthModule,
     PostModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [
