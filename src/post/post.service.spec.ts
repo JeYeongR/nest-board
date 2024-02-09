@@ -7,6 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Category } from '../entity/category.entity';
+import { Image } from '../entity/image.entity';
 import { Post } from '../entity/post.entity';
 import { PostCategory } from './enum/post-category.enum';
 import { PostCriteria } from './enum/post-criteria.enum';
@@ -39,9 +40,15 @@ describe('PostService', () => {
   };
   const mockImageService = {
     createImage: jest.fn(),
+    s3Url: 'test',
+    deleteImageOnS3: jest.fn(),
+  };
+  const mockEntityManager = {
+    save: jest.fn(),
+    delete: jest.fn(),
   };
   const mockDataSource = {
-    transaction: jest.fn(),
+    transaction: jest.fn((cb) => cb(mockEntityManager)),
   };
 
   beforeEach(async () => {
@@ -868,6 +875,125 @@ describe('PostService', () => {
       let hasThrown = false;
       try {
         await postService.getPostDetail(postId, userId);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('updatePost()', () => {
+    const postId = 1;
+    const userId = 1;
+    const images = [
+      {
+        key: 'test',
+        location: 'updateTest.test.com',
+      },
+    ];
+    const updatePostDto = {
+      title: 'updateTest',
+      content: 'updateTest,',
+    };
+    const date = new Date();
+    const mockImage = {
+      id: userId,
+      url: 'test.test.com',
+    };
+    const mockPost = {
+      id: postId,
+      title: 'test',
+      content: 'test',
+      viewCount: 0,
+      createdAt: date,
+      images: [mockImage],
+    };
+    const mockUpdatedImage = {
+      url: 'updateTest.test.com',
+    };
+    const mockUpdatedPost = {
+      id: postId,
+      title: updatePostDto.title,
+      content: updatePostDto.content,
+      viewCount: 0,
+      createdAt: date,
+      images: [mockUpdatedImage],
+    };
+
+    it('SUCCESS: 글을 정상적으로 수정한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(mockPost);
+      const spyImageCreateImageFn = jest.spyOn(mockImageService, 'createImage');
+      spyImageCreateImageFn.mockReturnValueOnce(mockUpdatedImage);
+      const spyDataSourceTransactionFn = jest.spyOn(
+        mockDataSource,
+        'transaction',
+      );
+      const spyEntityManagerSaveFn = jest.spyOn(mockEntityManager, 'save');
+      const spyEntityManagerDeleteFn = jest.spyOn(mockEntityManager, 'delete');
+      const spyImageDeleteImageOnS3Fn = jest.spyOn(
+        mockImageService,
+        'deleteImageOnS3',
+      );
+
+      // When
+      const result = await postService.updatePost(
+        postId,
+        userId,
+        images as CustomMulterFile[],
+        updatePostDto,
+      );
+
+      // Then
+      expect(result).toBeUndefined;
+      expect(spyPostFindOneFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneFn).toHaveBeenCalledWith({
+        where: {
+          id: postId,
+          user: { id: userId },
+        },
+        relations: { images: true },
+      });
+      expect(spyImageCreateImageFn).toHaveBeenCalledTimes(1);
+      expect(spyImageCreateImageFn).toHaveBeenCalledWith(images[0]);
+      expect(spyDataSourceTransactionFn).toHaveBeenCalledTimes(1);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledTimes(1);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockUpdatedPost);
+      expect(spyEntityManagerDeleteFn).toHaveBeenCalledTimes(1);
+      expect(spyEntityManagerDeleteFn).toHaveBeenCalledWith(
+        Image,
+        mockImage.id,
+      );
+      expect(spyImageDeleteImageOnS3Fn).toHaveBeenCalledTimes(1);
+      expect(spyImageDeleteImageOnS3Fn).toHaveBeenCalledWith(
+        mockImage.url.substring(mockImageService.s3Url.length + 1),
+      );
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await postService.updatePost(
+          postId,
+          userId,
+          images as CustomMulterFile[],
+          updatePostDto,
+        );
 
         // Then
       } catch (error) {
