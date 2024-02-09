@@ -7,13 +7,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Category } from '../entity/category.entity';
-import { Image } from '../entity/image.entity';
 import { Post } from '../entity/post.entity';
 import { PostCategory } from './enum/post-category.enum';
 import { PostCriteria } from './enum/post-criteria.enum';
 import { PostPeriod } from './enum/post-period.enum';
 import { PostSort } from './enum/post-sort.enum';
+import { ImageService } from './image.service';
 import { PostService } from './post.service';
+import { CustomMulterFile } from './type/custom-multer-file.type';
 
 describe('PostService', () => {
   let postService: PostService;
@@ -36,8 +37,8 @@ describe('PostService', () => {
   const mockCategoryRepository = {
     findOneBy: jest.fn(),
   };
-  const mockImageRepository = {
-    create: jest.fn(),
+  const mockImageService = {
+    createImage: jest.fn(),
   };
   const mockDataSource = {
     transaction: jest.fn(),
@@ -56,8 +57,8 @@ describe('PostService', () => {
           useValue: mockCategoryRepository,
         },
         {
-          provide: getRepositoryToken(Image),
-          useValue: mockImageRepository,
+          provide: ImageService,
+          useValue: mockImageService,
         },
         {
           provide: DataSource,
@@ -83,7 +84,6 @@ describe('PostService', () => {
       name: PostCategory.NOTICE,
     };
     const mockImage = {
-      id: 1,
       url: 'test.test.com',
     };
     const createPostDto = {
@@ -112,7 +112,7 @@ describe('PostService', () => {
         'findOneBy',
       );
       spyCategoryFindOneByFn.mockResolvedValueOnce(mockCategory);
-      const spyImageCreateFn = jest.spyOn(mockImageRepository, 'create');
+      const spyImageCreateFn = jest.spyOn(mockImageService, 'createImage');
       spyImageCreateFn.mockReturnValueOnce(mockImage);
       const spyPostCreateFn = jest.spyOn(mockPostRepository, 'create');
       spyPostCreateFn.mockReturnValueOnce(mockPost);
@@ -121,7 +121,7 @@ describe('PostService', () => {
       // When
       const result = await postService.createPost(
         user,
-        images as Express.MulterS3.File[],
+        images as CustomMulterFile[],
         createPostDto,
       );
 
@@ -133,7 +133,7 @@ describe('PostService', () => {
       });
       expect(spyImageCreateFn).toHaveBeenCalledTimes(1);
       expect(spyImageCreateFn).toHaveBeenCalledWith({
-        url: images[0].location,
+        location: images[0].location,
       });
       expect(spyPostCreateFn).toHaveBeenCalledTimes(1);
       expect(spyPostCreateFn).toHaveBeenCalledWith({
@@ -159,7 +159,7 @@ describe('PostService', () => {
       try {
         await postService.createPost(
           user,
-          images as Express.MulterS3.File[],
+          images as CustomMulterFile[],
           createPostDto,
         );
 

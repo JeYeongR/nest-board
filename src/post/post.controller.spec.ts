@@ -1,8 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostCategory } from './enum/post-category.enum';
+import { ImageService } from './image.service';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
+import { CustomMulterFile } from './type/custom-multer-file.type';
 
 describe('PostController', () => {
   let postController: PostController;
@@ -12,6 +14,7 @@ describe('PostController', () => {
     getPosts: jest.fn(),
     getPostDetail: jest.fn(),
   };
+  const mockImageService = {};
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,6 +24,10 @@ describe('PostController', () => {
         {
           provide: PostService,
           useValue: mockPostService,
+        },
+        {
+          provide: ImageService,
+          useValue: mockImageService,
         },
       ],
     }).compile();
@@ -62,7 +69,7 @@ describe('PostController', () => {
       // When
       const result = await postController.createPost(
         user,
-        images as Express.MulterS3.File[],
+        images as CustomMulterFile[],
         createPostDto,
       );
 
@@ -71,7 +78,7 @@ describe('PostController', () => {
       expect(spyCreatePostFn).toHaveBeenCalledTimes(1);
       expect(spyCreatePostFn).toHaveBeenCalledWith(
         user,
-        images as Express.MulterS3.File[],
+        images as CustomMulterFile[],
         createPostDto,
       );
     });
