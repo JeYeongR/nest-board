@@ -1,8 +1,7 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
 
 export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
-  imports: [ConfigModule],
   useFactory: (configService: ConfigService) => ({
     type: 'mysql',
     host: configService.get('DB_HOSTNAME'),
@@ -13,6 +12,7 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
     entities: [__dirname + '/../entity/*.entity{.ts,.js}'],
     timezone: 'Asia/Seoul',
     synchronize: true,
+    logging: true,
   }),
   inject: [ConfigService],
 };
