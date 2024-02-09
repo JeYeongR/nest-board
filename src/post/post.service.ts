@@ -172,12 +172,22 @@ export class PostService {
       );
     });
 
-    await Promise.all(
-      foundImages.map((image) => {
-        const key = image.url.substring(this.imageService.s3Url.length + 1);
-        this.imageService.deleteImageOnS3(key);
-      }),
-    );
+    await this.deleteImage(foundImages);
+  }
+
+  async deletePost(postId: number, userId: number): Promise<void> {
+    const foundPost = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        user: { id: userId },
+      },
+      relations: { images: true },
+    });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    await this.postRepository.remove(foundPost);
+
+    await this.deleteImage(foundPost.images);
   }
 
   private calculateStartDate(period: PostPeriod): Date | null {
@@ -195,7 +205,16 @@ export class PostService {
     return date;
   }
 
-  private mapImageFileToEntity(images: CustomMulterFile[]) {
+  private mapImageFileToEntity(images: CustomMulterFile[]): Image[] {
     return images.map((image) => this.imageService.createImage(image));
+  }
+
+  private async deleteImage(images: Image[]): Promise<void> {
+    await Promise.all(
+      images.map((image) => {
+        const key = image.url.substring(this.imageService.s3Url.length + 1);
+        this.imageService.deleteImageOnS3(key);
+      }),
+    );
   }
 }
