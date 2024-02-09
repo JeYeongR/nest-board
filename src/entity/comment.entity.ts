@@ -3,7 +3,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Post } from './post.entity';
@@ -17,12 +16,14 @@ export class Comment {
   @Column({ length: 20 })
   content: string;
 
-  @ManyToOne(() => Comment, (comment) => comment.children)
-  @JoinColumn({ name: 'parent_id' })
-  parent: Comment;
+  @Column()
+  group: number;
 
-  @OneToMany(() => Comment, (comment) => comment.parent)
-  children: Comment[];
+  @Column()
+  sequence: number;
+
+  @Column()
+  depth: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
