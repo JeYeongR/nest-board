@@ -18,6 +18,7 @@ export class Comment {
   content: string;
 
   @ManyToOne(() => Comment, (comment) => comment.children)
+  @JoinColumn({ name: 'parent_id' })
   parent: Comment;
 
   @OneToMany(() => Comment, (comment) => comment.parent)
