@@ -164,7 +164,7 @@ export class PostService {
     foundPost.title = title;
     foundPost.content = content;
 
-    this.dataSource.transaction(async (entityManager) => {
+    await this.dataSource.transaction(async (entityManager) => {
       await entityManager.save(foundPost);
 
       await Promise.all(
