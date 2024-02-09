@@ -107,8 +107,8 @@ export class PostService {
       });
     }
 
-    const foundPostCount = await qb.getCount();
-    const foundPostTotalPage = Math.ceil(foundPostCount / limit);
+    const foundPostsCount = await qb.getCount();
+    const foundPostTotalPage = Math.ceil(foundPostsCount / limit);
     if (foundPostTotalPage < pageNo)
       throw new BadRequestException('PAGE_OUT_OF_RANGE');
 
@@ -118,7 +118,12 @@ export class PostService {
       (post) => new PostResponseDto(post),
     );
 
-    return new PageResponseDto(pageNo, foundPostCount, limit, postResponseDtos);
+    return new PageResponseDto(
+      pageNo,
+      foundPostsCount,
+      limit,
+      postResponseDtos,
+    );
   }
 
   async getPostDetail(
