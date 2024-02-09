@@ -144,14 +144,14 @@ export class PostService {
 
   async updatePost(
     postId: number,
-    user: User,
+    userId: number,
     images: CustomMulterFile[],
     updatePostDto: UpdatePostDto,
   ): Promise<void> {
     const foundPost = await this.postRepository.findOne({
       where: {
         id: postId,
-        user: { id: user.id },
+        user: { id: userId },
       },
       relations: { images: true },
     });
@@ -161,7 +161,6 @@ export class PostService {
     const imageEntities = this.mapImageFileToEntity(images);
     const { title, content } = updatePostDto;
     foundPost.images = imageEntities;
-    foundPost.user = user;
     foundPost.title = title;
     foundPost.content = content;
 
