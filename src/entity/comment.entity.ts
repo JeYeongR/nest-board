@@ -3,16 +3,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
-  Tree,
-  TreeChildren,
-  TreeParent,
 } from 'typeorm';
 import { Post } from './post.entity';
 import { User } from './user.entity';
 
 @Entity()
-@Tree('closure-table')
 export class Comment {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
@@ -20,11 +17,11 @@ export class Comment {
   @Column({ length: 20 })
   content: string;
 
-  @TreeChildren()
-  children: Comment[];
-
-  @TreeParent()
+  @ManyToOne(() => Comment, (comment) => comment.children)
   parent: Comment;
+
+  @OneToMany(() => Comment, (comment) => comment.parent)
+  children: Comment[];
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
