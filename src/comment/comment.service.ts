@@ -39,7 +39,6 @@ export class CommentService {
       user,
       post: foundPost,
     });
-
     await this.commentRepository.save(comment);
   }
 }
