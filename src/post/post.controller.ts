@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -81,5 +82,15 @@ export class PostController {
     await this.postService.updatePost(postId, user.id, images, updatePostDto);
 
     return CommonResponseDto.success<void>(ResponseMessage.UPDATE_SUCCESS);
+  }
+
+  @Delete('/:postId')
+  async deletePost(
+    @Param('postId', ParseIntPipe) postId: number,
+    @GetUser() user: User,
+  ): Promise<CommonResponseDto<void>> {
+    await this.postService.deletePost(postId, user.id);
+
+    return CommonResponseDto.success<void>(ResponseMessage.DELETE_SUCCESS);
   }
 }
