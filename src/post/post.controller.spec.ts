@@ -14,6 +14,7 @@ describe('PostController', () => {
     getPosts: jest.fn(),
     getPostDetail: jest.fn(),
     updatePost: jest.fn(),
+    deletePost: jest.fn(),
   };
   const mockImageService = {};
 
@@ -233,6 +234,34 @@ describe('PostController', () => {
         images,
         updatePostDto,
       );
+    });
+  });
+
+  describe('deletePost()', () => {
+    const postId = 1;
+    const user = {
+      id: 1,
+      email: 'test@email',
+      nickname: 'test',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+
+    it('SUCCESS: 포스트 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyDeletePostFn = jest.spyOn(mockPostService, 'deletePost');
+
+      const expectedResult = {
+        message: 'DELETE_SUCCESS',
+        statusCode: 200,
+      };
+
+      // When
+      const result = await postController.deletePost(postId, user);
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyDeletePostFn).toHaveBeenCalledTimes(1);
+      expect(spyDeletePostFn).toHaveBeenCalledWith(postId, user.id);
     });
   });
 });
