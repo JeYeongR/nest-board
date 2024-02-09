@@ -13,6 +13,7 @@ describe('PostController', () => {
     createPost: jest.fn(),
     getPosts: jest.fn(),
     getPostDetail: jest.fn(),
+    updatePost: jest.fn(),
   };
   const mockImageService = {};
 
@@ -185,6 +186,53 @@ describe('PostController', () => {
       expect(result).toEqual(expectedResult);
       expect(spyGetPostDetailFn).toHaveBeenCalledTimes(1);
       expect(spyGetPostDetailFn).toHaveBeenCalledWith(postId, user.id);
+    });
+  });
+
+  describe('updatePost()', () => {
+    const postId = 1;
+    const user = {
+      id: 1,
+      email: 'test@email',
+      nickname: 'test',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+    const images = [
+      {
+        location: 'updateTest.test.com',
+      },
+    ];
+    const updatePostDto = {
+      title: 'updateTest',
+      content: 'updateTest,',
+    };
+
+    it('SUCCESS: 포스트 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyUpdatePostFn = jest.spyOn(mockPostService, 'updatePost');
+
+      const expectedResult = {
+        message: 'UPDATE_SUCCESS',
+        statusCode: 200,
+      };
+
+      // When
+      const result = await postController.updatePost(
+        postId,
+        user,
+        images as CustomMulterFile[],
+        updatePostDto,
+      );
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyUpdatePostFn).toHaveBeenCalledTimes(1);
+      expect(spyUpdatePostFn).toHaveBeenCalledWith(
+        postId,
+        user.id,
+        images,
+        updatePostDto,
+      );
     });
   });
 });
