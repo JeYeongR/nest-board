@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Comment } from '../entity/comment.entity';
 import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
@@ -13,7 +13,6 @@ export class CommentService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly dataSource: DataSource,
   ) {}
 
   async createComment(
