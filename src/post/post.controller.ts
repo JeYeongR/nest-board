@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UploadedFiles,
@@ -20,6 +21,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostDto } from './dto/get-post.dto';
 import { PostDetailResponseDto } from './dto/post-detail-response.dto';
 import { PostResponseDto } from './dto/post-response.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { PostExceptionFilter } from './filter/post-exception.filter';
 import { ImageInterceptor } from './interceptor/image.interceptor';
 import { PostService } from './post.service';
@@ -65,5 +67,19 @@ export class PostController {
     return CommonResponseDto.success<PostDetailResponseDto>(
       ResponseMessage.READ_SUCCESS,
     ).setData(result);
+  }
+
+  @Patch('/:postId')
+  @UseInterceptors(ImageInterceptor)
+  @UseFilters(PostExceptionFilter)
+  async updatePost(
+    @Param('postId', ParseIntPipe) postId: number,
+    @GetUser() user: User,
+    @UploadedFiles() images: CustomMulterFile[],
+    @Body() updatePostDto: UpdatePostDto,
+  ): Promise<CommonResponseDto<void>> {
+    await this.postService.updatePost(postId, user.id, images, updatePostDto);
+
+    return CommonResponseDto.success<void>(ResponseMessage.UPDATE_SUCCESS);
   }
 }
