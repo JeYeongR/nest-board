@@ -28,7 +28,7 @@ export class AccessTokenAuthGuard implements CanActivate {
     ]);
 
     if (isPublic) {
-      const foundUser = this.getUserFromTokenInPublic(accessToken);
+      const foundUser = await this.getUserFromTokenInPublic(accessToken);
       request.user = foundUser;
     } else {
       const foundUser = await this.getUserFromToken(accessToken);
