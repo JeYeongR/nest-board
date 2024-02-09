@@ -15,7 +15,7 @@ export class Image {
   @Column({ length: 300 })
   url: string;
 
-  @ManyToOne(() => Post)
+  @ManyToOne(() => Post, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'post_id' })
   post: Post;
 }
