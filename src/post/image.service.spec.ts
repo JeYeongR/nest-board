@@ -7,7 +7,7 @@ import { Image } from '../entity/image.entity';
 import { ImageService } from './image.service';
 import { CustomMulterFile } from './type/custom-multer-file.type';
 
-describe('UserService', () => {
+describe('ImageService', () => {
   let imageService: ImageService;
 
   const mockConfigService = {
