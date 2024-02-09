@@ -34,6 +34,7 @@ describe('PostService', () => {
       getMany: jest.fn(),
     })),
     findOne: jest.fn(),
+    remove: jest.fn(),
   };
   const mockCategoryRepository = {
     findOneBy: jest.fn(),
@@ -954,7 +955,7 @@ describe('PostService', () => {
       );
 
       // Then
-      expect(result).toBeUndefined;
+      expect(result).toBeUndefined();
       expect(spyPostFindOneFn).toHaveBeenCalledTimes(1);
       expect(spyPostFindOneFn).toHaveBeenCalledWith({
         where: {
@@ -993,6 +994,79 @@ describe('PostService', () => {
           images as CustomMulterFile[],
           updatePostDto,
         );
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('deletePost()', () => {
+    const postId = 1;
+    const userId = 1;
+    const mockPost = {
+      id: postId,
+      title: 'test',
+      content: 'test',
+      viewCount: 0,
+      createdAt: new Date(),
+      images: [
+        {
+          id: userId,
+          url: 'test.test.com',
+        },
+      ],
+    };
+
+    it('SUCCESS: 글을 정상적으로 삭제한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(mockPost);
+      const spyPostRemoveFn = jest.spyOn(mockPostRepository, 'remove');
+      const spyImageDeleteImageOnS3Fn = jest.spyOn(
+        mockImageService,
+        'deleteImageOnS3',
+      );
+
+      // When
+      const result = await postService.deletePost(postId, userId);
+
+      // Then
+      expect(result).toBeUndefined;
+      expect(spyPostFindOneFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneFn).toHaveBeenCalledWith({
+        where: {
+          id: postId,
+          user: { id: userId },
+        },
+        relations: { images: true },
+      });
+      expect(spyPostRemoveFn).toHaveBeenCalledTimes(1);
+      expect(spyPostRemoveFn).toHaveBeenCalledWith(mockPost);
+      expect(spyImageDeleteImageOnS3Fn).toHaveBeenCalledTimes(1);
+      expect(spyImageDeleteImageOnS3Fn).toHaveBeenCalledWith(
+        mockPost.images[0].url.substring(mockImageService.s3Url.length + 1),
+      );
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneFn = jest.spyOn(mockPostRepository, 'findOne');
+      spyPostFindOneFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await postService.deletePost(postId, userId);
 
         // Then
       } catch (error) {
