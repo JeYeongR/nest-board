@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -68,5 +69,16 @@ export class CommentController {
     );
 
     return CommonResponseDto.success(ResponseMessage.UPDATE_SUCCESS);
+  }
+
+  @Delete('/:commentId')
+  async deleteComment(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @GetUser() user: User,
+  ): Promise<CommonResponseDto<void>> {
+    await this.commentService.deleteComment(postId, commentId, user.id);
+
+    return CommonResponseDto.success(ResponseMessage.DELETE_SUCCESS);
   }
 }
