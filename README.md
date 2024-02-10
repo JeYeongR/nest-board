@@ -14,7 +14,7 @@
 
     - `Request`
 
-      ```json
+      ```
       {
         "email": string,     // 이메일 양식
         "password": string   // 최대 20글자
@@ -23,7 +23,7 @@
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
         "message": "LOGIN_SUCCESS",
@@ -38,14 +38,14 @@
 
     - `Request`
 
-      ```json
+      ```
       // 헤더에 Authorization: 'Bearer token', refreshtoken: 'Bearer token' 필요
       {}
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 201,
         "message": "CREATE_SUCCESS",
@@ -61,17 +61,17 @@
 
     - `Request`
 
-      ```json
+      ```
       {
         "email": string,     // 이메일 양식
-        "password": string   // 최대 20글자
+        "password": string,   // 최대 20글자
         "nickname": string   // 최대 10글자
       }
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 201,
         "message": "CREATE_SUCCESS"
@@ -84,19 +84,19 @@
 
     - `Request`
 
-      ```json
+      ```
       // form-data
       {
         "images": file,    // 이미지 파일. 여러개 가능. 필수 X
         "title": text,     // 최대 20글자
-        "content": text    // 최대 500글자
+        "content": text,   // 최대 500글자
         "category": text   // enum으로 notice, qa, ask 가능
       }
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 201,
         "message": "CREATE_SUCCESS"
@@ -107,7 +107,7 @@
 
     - `Request`
 
-      ```json
+      ```
       // 쿼리스트링
       {
         "pageNo": number,      // 양수만. 필수 X
@@ -115,17 +115,17 @@
         "category": string,    // enum으로 notice, qa, ask 가능
         "sort": string,        // enum으로 newest, popularity 가능. 필수 X
         "period" string,       // enum으로 total, one-year, one-month, one-week 가능. 필수 X. 정렬이 인기순일 때만 가능
-        "keyword": string      // 최소 2글자. 필수 X
+        "keyword": string,     // 최소 2글자. 필수 X
         "criteria": string     // enum으로 all, title, writer 가능. 필수 X. 키워드 있을 때만 가능
       }
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "READ_SUCCESS".
+        "message": "READ_SUCCESS",
         "data": {
           "currentPage": number,
           "totalCount": number,
@@ -151,14 +151,14 @@
 
     - `Request`
 
-      ```json
+      ```
       // 토큰있으면 isMyPost 표시
       {}
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
         "message": "READ_SUCCESS".
@@ -191,7 +191,7 @@
 
     - `Request`
 
-      ```json
+      ```
       // form-data
       {
         "images": file,    // 이미지 파일. 여러개 가능. 필수 X
@@ -202,10 +202,10 @@
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "UPDATE_SUCCESS".
+        "message": "UPDATE_SUCCESS"
       }
       ```
 
@@ -213,16 +213,16 @@
 
     - `Request`
 
-      ```json
+      ```
       {}
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "DELETE_SUCCESS".
+        "message": "DELETE_SUCCESS"
       }
       ```
 
@@ -232,16 +232,16 @@
 
     - `Request`
 
-      ```json
+      ```
       {
         "content": string,    // 최대 20글자
-        "parentId": number,   // 양수만. 필수 X. 있으면 대댓글
+        "parentId": number    // 양수만. 필수 X. 있으면 대댓글
       }
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 201,
         "message": "CREATE_SUCCESS"
@@ -252,17 +252,17 @@
 
     - `Request`
 
-      ```json
+      ```
       // 토큰있으면 isMyPost 표시
       {}
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "READ_SUCCESS".
+        "message": "READ_SUCCESS",
         "data": {
           "currentPage": number,
           "totalCount": number,
@@ -290,7 +290,7 @@
 
     - `Request`
 
-      ```json
+      ```
       {
         "content": text    // 최대 20글자
       }
@@ -298,10 +298,10 @@
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "UPDATE_SUCCESS".
+        "message": "UPDATE_SUCCESS"
       }
       ```
 
@@ -309,15 +309,15 @@
 
     - `Request`
 
-      ```json
+      ```
       {}
       ```
 
     - `Response`
 
-      ```json
+      ```
       {
         "statusCode": 200,
-        "message": "DELETE_SUCCESS".
+        "message": "DELETE_SUCCESS"
       }
       ```
