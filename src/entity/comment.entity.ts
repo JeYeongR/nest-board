@@ -16,14 +16,26 @@ export class Comment {
   @Column({ length: 20 })
   content: string;
 
-  @Column()
+  @Column({ type: 'bigint' })
   group: number;
 
-  @Column()
+  @Column({
+    default: 1,
+    type: 'bigint',
+  })
   sequence: number;
 
-  @Column()
+  @Column({
+    default: 1,
+    type: 'bigint',
+  })
   depth: number;
+
+  @Column({
+    default: 0,
+    name: 'children_num',
+  })
+  childrenNum: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
