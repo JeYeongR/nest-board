@@ -27,7 +27,7 @@ export class CommentService {
     const { content, parentId } = createCommentDto;
 
     let comment: Comment = null;
-    this.dataSource.transaction(async (entityManager) => {
+    await this.dataSource.transaction(async (entityManager) => {
       if (!parentId) {
         let maxGroup = await this.commentRepository.maximum('group', {
           post: { id: postId },
