@@ -12,6 +12,7 @@ import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -116,6 +117,27 @@ export class CommentService {
       limit,
       commentResponseDtos,
     );
+  }
+
+  async updateComment(
+    postId: number,
+    commentId: number,
+    userId: number,
+    updateCommentDto: UpdateCommentDto,
+  ): Promise<void> {
+    const foundPost = await this.postRepository.findOneBy({ id: postId });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    const foundComment = await this.commentRepository.findOneBy({
+      post: { id: postId },
+      user: { id: userId },
+      id: commentId,
+    });
+    if (!foundComment) throw new NotFoundException('NOT_FOUND_COMMENT');
+
+    foundComment.content = updateCommentDto.content;
+
+    await this.commentRepository.save(foundComment);
   }
 
   private async getSequenceAndUpdate(
