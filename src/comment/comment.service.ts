@@ -140,6 +140,46 @@ export class CommentService {
     await this.commentRepository.save(foundComment);
   }
 
+  async deleteComment(
+    postId: number,
+    commentId: number,
+    userId: number,
+  ): Promise<void> {
+    const foundPost = await this.postRepository.findOneBy({ id: postId });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    const foundComment = await this.commentRepository.findOneBy({
+      post: { id: postId },
+      user: { id: userId },
+      id: commentId,
+    });
+    if (!foundComment) throw new NotFoundException('NOT_FOUND_COMMENT');
+
+    const sequence = +foundComment.sequence;
+    const childrenNum = +foundComment.childrenNum;
+    const group = +foundComment.group;
+    await this.dataSource.transaction(async (entityManager) => {
+      await entityManager
+        .createQueryBuilder()
+        .delete()
+        .from(Comment)
+        .where('sequence > :minSequence', { minSequence: sequence - 1 })
+        .andWhere('sequence < :maxSequence', {
+          maxSequence: sequence + childrenNum + 1,
+        })
+        .andWhere('group = :group', { group })
+        .execute();
+
+      await entityManager
+        .createQueryBuilder()
+        .update(Comment)
+        .set({ sequence: () => `sequence - ${sequence + childrenNum - 1}` })
+        .where('group = :group', { group })
+        .andWhere('sequence > :sequence', { sequence: sequence })
+        .execute();
+    });
+  }
+
   private async getSequenceAndUpdate(
     comment: Comment,
     entityManager: EntityManager,
