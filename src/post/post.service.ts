@@ -56,7 +56,6 @@ export class PostService {
     await this.postRepository.save(post);
   }
 
-  // TODO: 시간 남으면 리팩터링하기
   async getPosts(
     getPostDto: GetPostDto,
   ): Promise<PageResponseDto<PostResponseDto>> {
