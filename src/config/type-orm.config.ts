@@ -12,7 +12,6 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
     entities: [__dirname + '/../entity/*.entity{.ts,.js}'],
     timezone: 'Asia/Seoul',
     synchronize: true,
-    logging: true,
   }),
   inject: [ConfigService],
 };
