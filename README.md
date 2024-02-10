@@ -1,73 +1,323 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# API 명세
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+- 토큰이 필수인 곳은 `토큰 O`라 표시하고, 필수가 아닌 값은 주석으로 `필수 X`라고 표시했습니다.
+- 인증(`auth`)은 `HTTP` 헤더를 사용해서 진행됩니다.<br>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+  |      Key      |       Value        |
+  | :-----------: | :----------------: |
+  | Content-Type  | `application/json` |
+  | Authorization |   `Bearer token`   |
 
-## Description
+* ## Auth
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+  - ### 로그인: `POST` `/auth/login`
 
-## Installation
+    - `Request`
 
-```bash
-$ npm install
-```
+      ```json
+      {
+        "email": string,     // 이메일 양식
+        "password": string   // 최대 20글자
+      }
+      ```
 
-## Running the app
+    - `Response`
 
-```bash
-# development
-$ npm run start
+      ```json
+      {
+        "statusCode": 200,
+        "message": "LOGIN_SUCCESS",
+        "data": {
+          "accessToken": string,
+          "refreshToken": string
+        }
+      }
+      ```
 
-# watch mode
-$ npm run start:dev
+  - ### 엑세스 토큰 재발급: `POST` `/auth/reissue` `토큰 O`
 
-# production mode
-$ npm run start:prod
-```
+    - `Request`
 
-## Test
+      ```json
+      // 헤더에 Authorization: 'Bearer token', refreshtoken: 'Bearer token' 필요
+      {}
+      ```
 
-```bash
-# unit tests
-$ npm run test
+    - `Response`
 
-# e2e tests
-$ npm run test:e2e
+      ```json
+      {
+        "statusCode": 201,
+        "message": "CREATE_SUCCESS",
+        "data": {
+          "accessToken": string
+        }
+      }
+      ```
 
-# test coverage
-$ npm run test:cov
-```
+* ## User
 
-## Support
+  - ### 회원가입: `POST` `/users`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+    - `Request`
 
-## Stay in touch
+      ```json
+      {
+        "email": string,     // 이메일 양식
+        "password": string   // 최대 20글자
+        "nickname": string   // 최대 10글자
+      }
+      ```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+    - `Response`
 
-## License
+      ```json
+      {
+        "statusCode": 201,
+        "message": "CREATE_SUCCESS"
+      }
+      ```
 
-Nest is [MIT licensed](LICENSE).
+* ## Post
+
+  - ### 글 생성: `POST` `/posts` `토큰 O`
+
+    - `Request`
+
+      ```json
+      // form-data
+      {
+        "images": file,    // 이미지 파일. 여러개 가능. 필수 X
+        "title": text,     // 최대 20글자
+        "content": text    // 최대 500글자
+        "category": text   // enum으로 notice, qa, ask 가능
+      }
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 201,
+        "message": "CREATE_SUCCESS"
+      }
+      ```
+
+  - ### 글 조회: `GET` `/posts`
+
+    - `Request`
+
+      ```json
+      // 쿼리스트링
+      {
+        "pageNo": number,      // 양수만. 필수 X
+        "pageSize": number,    // 양수만. 필수 X
+        "category": string,    // enum으로 notice, qa, ask 가능
+        "sort": string,        // enum으로 newest, popularity 가능. 필수 X
+        "period" string,       // enum으로 total, one-year, one-month, one-week 가능. 필수 X. 정렬이 인기순일 때만 가능
+        "keyword": string      // 최소 2글자. 필수 X
+        "criteria": string     // enum으로 all, title, writer 가능. 필수 X. 키워드 있을 때만 가능
+      }
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "READ_SUCCESS".
+        "data": {
+          "currentPage": number,
+          "totalCount": number,
+          "pageSize": number,
+          "totalPage": number,
+          "items": [
+            {
+              "id": string,
+              "title": string,
+              "viewCount": number,
+              "createdAt": date,
+              "user": {
+                "id": string,
+                "nickname": string
+              }
+            }
+          ]
+        }
+      }
+      ```
+
+  - ### 글 상세 조회: `GET` `/posts/:postId` `토큰 옵션`
+
+    - `Request`
+
+      ```json
+      // 토큰있으면 isMyPost 표시
+      {}
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "READ_SUCCESS".
+        "data": {
+          "id": string,
+          "title": string,
+          "content": string,
+          "viewCount": number,
+          "createdAt": date,
+          "category": {
+            "id": string,
+            "name": string
+          },
+          "user": {
+            "id": string,
+            "nickname": string
+          },
+          "image": [
+            {
+              "id": string,
+              "url": string
+            }
+          ],
+          "isMyPost": boolean   // 토큰 없으면 다 false
+        }
+      }
+      ```
+
+  - ### 글 수정: `PATCH` `/posts/:postId` `토큰 O`
+
+    - `Request`
+
+      ```json
+      // form-data
+      {
+        "images": file,    // 이미지 파일. 여러개 가능. 필수 X
+        "title": text,     // 최대 20글자
+        "content": text    // 최대 500글자
+      }
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "UPDATE_SUCCESS".
+      }
+      ```
+
+  - ### 글 삭제: `DELETE` `/posts/:postId` `토큰 O`
+
+    - `Request`
+
+      ```json
+      {}
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "DELETE_SUCCESS".
+      }
+      ```
+
+* ## Comment
+
+  - ### 댓글 생성: `POST` `/posts/:postId/comments` `토큰 O`
+
+    - `Request`
+
+      ```json
+      {
+        "content": string,    // 최대 20글자
+        "parentId": number,   // 양수만. 필수 X. 있으면 대댓글
+      }
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 201,
+        "message": "CREATE_SUCCESS"
+      }
+      ```
+
+  - ### 댓글 조회: `GET` `/posts/:postId/comments` `토큰 옵션`
+
+    - `Request`
+
+      ```json
+      // 토큰있으면 isMyPost 표시
+      {}
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "READ_SUCCESS".
+        "data": {
+          "currentPage": number,
+          "totalCount": number,
+          "pageSize": number,
+          "totalPage": number,
+          "items": [
+            {
+              "id": string,
+              "content": string,
+              "group": number,        // 댓글 그룹
+              "sequence": date,       // 댓글 순서
+              "depth": date,          // 댓글 깊이
+              "user": {
+                "id": string,
+                "nickname": string
+              },
+              "isMyComment": false    // 토큰 없으면 다 false
+            }
+          ]
+        }
+      }
+      ```
+
+  - ### 댓글 수정: `PATCH` `/posts/:postId/comments/:commentId` `토큰 O`
+
+    - `Request`
+
+      ```json
+      {
+        "content": text    // 최대 20글자
+      }
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "UPDATE_SUCCESS".
+      }
+      ```
+
+  - ### 댓글 삭제: `DELETE` `/posts/:postId/comments/:commentId` `토큰 O`
+
+    - `Request`
+
+      ```json
+      {}
+      ```
+
+    - `Response`
+
+      ```json
+      {
+        "statusCode": 200,
+        "message": "DELETE_SUCCESS".
+      }
+      ```
