@@ -9,6 +9,7 @@ describe('CommentController', () => {
     createComment: jest.fn(),
     getComments: jest.fn(),
     updateComment: jest.fn(),
+    deleteComment: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -184,6 +185,46 @@ describe('CommentController', () => {
         commentId,
         user.id,
         updateCommentDto,
+      );
+    });
+  });
+
+  describe('deleteComment()', () => {
+    const postId = 1;
+    const commentId = 1;
+    const user = {
+      id: 1,
+      email: 'test@email',
+      nickname: 'test',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+
+    it('SUCCESS: 코멘트 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyDeleteCommentFn = jest.spyOn(
+        mockCommentService,
+        'deleteComment',
+      );
+
+      const expectedResult = {
+        message: 'DELETE_SUCCESS',
+        statusCode: 200,
+      };
+
+      // When
+      const result = await commentController.deleteComment(
+        postId,
+        commentId,
+        user,
+      );
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyDeleteCommentFn).toHaveBeenCalledTimes(1);
+      expect(spyDeleteCommentFn).toHaveBeenCalledWith(
+        postId,
+        commentId,
+        user.id,
       );
     });
   });
