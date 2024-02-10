@@ -19,6 +19,7 @@ describe('CommentService', () => {
     maximum: jest.fn(),
     sum: jest.fn(),
     findAndCount: jest.fn(),
+    save: jest.fn(),
   };
   const mockPostRepository = {
     findOneBy: jest.fn(),
@@ -610,6 +611,135 @@ describe('CommentService', () => {
           error: 'Bad Request',
           message: 'PAGE_OUT_OF_RANGE',
           statusCode: 400,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('updateComment()', () => {
+    const postId = 1;
+    const userId = 1;
+    const commentId = 1;
+    const updateCommentDto = { content: 'test2' };
+    const mockPost = {
+      id: 1,
+      title: '치킨',
+      content: 'test',
+      viewCount: 1,
+      createdAt: new Date(),
+      user: {
+        id: 1,
+        nickname: '사과',
+      },
+    };
+    const mockComment = {
+      id: 1,
+      sequence: 1,
+      content: 'test',
+      group: 1,
+      depth: 1,
+      user: {
+        id: userId,
+        nickname: 'test',
+      },
+      isMyComment: true,
+    };
+
+    it('SUCCESS: 댓글을 정상적으로 수정한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockReturnValueOnce(mockComment);
+      const spyCommentSaveFn = jest.spyOn(mockCommentRepository, 'save');
+
+      // When
+      const result = await commentService.updateComment(
+        postId,
+        commentId,
+        userId,
+        updateCommentDto,
+      );
+
+      // Then
+      expect(result).toBeUndefined();
+      expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyCommentFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledWith({
+        post: { id: postId },
+        user: { id: userId },
+        id: commentId,
+      });
+      expect(spyCommentSaveFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentSaveFn).toHaveBeenCalledWith({
+        ...mockComment,
+        content: updateCommentDto.content,
+      });
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.updateComment(
+          postId,
+          commentId,
+          userId,
+          updateCommentDto,
+        );
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+
+    it('FAILURE: 댓글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockReturnValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.updateComment(
+          postId,
+          commentId,
+          userId,
+          updateCommentDto,
+        );
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_COMMENT',
+          statusCode: 404,
         });
       }
       expect(hasThrown).toBeTruthy();
