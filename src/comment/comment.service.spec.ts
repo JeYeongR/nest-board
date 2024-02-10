@@ -1,6 +1,7 @@
 import { HttpStatus, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Comment } from '../entity/comment.entity';
 import { Post } from '../entity/post.entity';
 import { CommentService } from './comment.service';
@@ -11,10 +12,25 @@ describe('CommentService', () => {
   const mockCommentRepository = {
     findOneBy: jest.fn(),
     create: jest.fn(),
-    save: jest.fn(),
+    maximum: jest.fn(),
+    sum: jest.fn(),
   };
   const mockPostRepository = {
     findOneBy: jest.fn(),
+  };
+  const mockEntityManager = {
+    save: jest.fn(),
+    delete: jest.fn(),
+    createQueryBuilder: jest.fn(() => ({
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      execute: jest.fn(),
+    })),
+  };
+  const mockDataSource = {
+    transaction: jest.fn((cb) => cb(mockEntityManager)),
   };
 
   beforeEach(async () => {
@@ -28,6 +44,10 @@ describe('CommentService', () => {
         {
           provide: getRepositoryToken(Post),
           useValue: mockPostRepository,
+        },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
         },
       ],
     }).compile();
@@ -62,12 +82,18 @@ describe('CommentService', () => {
         nickname: '사과',
       },
     };
+    const maxGroup = 1;
     const mockParentComment = {
       id: 1,
-      cotent: 'test',
+      content: 'test',
+      depth: 1,
+      sequence: 1,
+      group: maxGroup + 1,
+      childrenNum: 0,
     };
     const mockComment = {
-      cotent: 'test',
+      content: 'test',
+      group: maxGroup + 1,
       user,
       post: mockPost,
     };
@@ -76,6 +102,7 @@ describe('CommentService', () => {
       content: 'test',
       parentId: 1,
     };
+    const mockChildrenNumSum = 0;
 
     it('SUCCESS: 댓글을 정상적으로 생성한다.', async () => {
       // Given
@@ -83,7 +110,13 @@ describe('CommentService', () => {
       spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
       const spyCommentCreateFn = jest.spyOn(mockCommentRepository, 'create');
       spyCommentCreateFn.mockReturnValueOnce(mockComment);
-      const spyCommentSaveFn = jest.spyOn(mockCommentRepository, 'save');
+      const spyCommentMaximumFn = jest.spyOn(mockCommentRepository, 'maximum');
+      spyCommentMaximumFn.mockResolvedValueOnce(maxGroup);
+      const spyDataSourceTransactionFn = jest.spyOn(
+        mockDataSource,
+        'transaction',
+      );
+      const spyEntityManagerSaveFn = jest.spyOn(mockEntityManager, 'save');
 
       // When
       const result = await commentService.createComment(
@@ -99,26 +132,50 @@ describe('CommentService', () => {
       expect(spyCommentCreateFn).toHaveBeenCalledTimes(1);
       expect(spyCommentCreateFn).toHaveBeenCalledWith({
         content: createCommentDto.content,
-        parent: null,
-        user,
+        group: maxGroup + 1,
         post: mockPost,
+        user,
       });
-      expect(spyCommentSaveFn).toHaveBeenCalledTimes(1);
-      expect(spyCommentSaveFn).toHaveBeenCalledWith(mockComment);
+      expect(spyCommentMaximumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentMaximumFn).toHaveBeenCalledWith('group', {
+        post: { id: postId },
+      });
+      expect(spyDataSourceTransactionFn).toHaveBeenCalledTimes(1);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledTimes(1);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockComment);
     });
 
-    it('SUCCESS: 대댓글을 정상적으로 생성한다.', async () => {
+    it('SUCCESS: depth < maxDepth에 대댓글을 정상적으로 생성한다.', async () => {
       // Given
+      const mockMaxDepth = 3;
+      const resultSequence =
+        mockChildrenNumSum + mockParentComment.sequence + 1;
+      const mockReplyComment = {
+        content: 'test',
+        group: maxGroup + 1,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
+        user,
+        post: mockPost,
+      };
       const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
       spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyDataSourceTransactionFn = jest.spyOn(
+        mockDataSource,
+        'transaction',
+      );
       const spyCommentFindOneByFn = jest.spyOn(
         mockCommentRepository,
         'findOneBy',
       );
       spyCommentFindOneByFn.mockResolvedValueOnce(mockParentComment);
+      const spyCommentSumFn = jest.spyOn(mockCommentRepository, 'sum');
+      spyCommentSumFn.mockResolvedValueOnce(mockChildrenNumSum);
+      const spyCommentMaximumFn = jest.spyOn(mockCommentRepository, 'maximum');
+      spyCommentMaximumFn.mockResolvedValueOnce(mockMaxDepth);
       const spyCommentCreateFn = jest.spyOn(mockCommentRepository, 'create');
-      spyCommentCreateFn.mockReturnValueOnce(mockComment);
-      const spyCommentSaveFn = jest.spyOn(mockCommentRepository, 'save');
+      spyCommentCreateFn.mockReturnValueOnce(mockReplyComment);
+      const spyEntityManagerSaveFn = jest.spyOn(mockEntityManager, 'save');
 
       // When
       const result = await commentService.createComment(
@@ -131,19 +188,217 @@ describe('CommentService', () => {
       expect(result).toBeUndefined();
       expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
       expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyDataSourceTransactionFn).toHaveBeenCalledTimes(1);
       expect(spyCommentFindOneByFn).toHaveBeenCalledTimes(1);
       expect(spyCommentFindOneByFn).toHaveBeenCalledWith({
         id: createCommentDtoWithParentId.parentId,
       });
+      expect(spyCommentSumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentSumFn).toHaveBeenCalledWith('childrenNum', {
+        group: mockParentComment.group,
+      });
+      expect(spyCommentMaximumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentMaximumFn).toHaveBeenCalledWith('depth', {
+        group: mockParentComment.group,
+      });
       expect(spyCommentCreateFn).toHaveBeenCalledTimes(1);
       expect(spyCommentCreateFn).toHaveBeenCalledWith({
         content: createCommentDtoWithParentId.content,
-        parent: mockParentComment,
+        group: mockParentComment.group,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
         user,
         post: mockPost,
       });
-      expect(spyCommentSaveFn).toHaveBeenCalledTimes(1);
-      expect(spyCommentSaveFn).toHaveBeenCalledWith(mockComment);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledTimes(2);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockParentComment);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockReplyComment);
+    });
+
+    it('SUCCESS: depth == maxDepth 대댓글을 정상적으로 생성한다.', async () => {
+      // Given
+      const mockMaxDepth = 2;
+      const resultSequence =
+        mockChildrenNumSum +
+        mockParentComment.sequence +
+        1 +
+        mockParentComment.childrenNum;
+      const mockReplyComment = {
+        content: 'test',
+        group: maxGroup + 1,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
+        user,
+        post: mockPost,
+      };
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyDataSourceTransactionFn = jest.spyOn(
+        mockDataSource,
+        'transaction',
+      );
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockResolvedValueOnce(mockParentComment);
+      const spyCommentSumFn = jest.spyOn(mockCommentRepository, 'sum');
+      spyCommentSumFn.mockResolvedValueOnce(mockChildrenNumSum);
+      const spyCommentMaximumFn = jest.spyOn(mockCommentRepository, 'maximum');
+      spyCommentMaximumFn.mockResolvedValueOnce(mockMaxDepth);
+      const qb = mockEntityManager.createQueryBuilder();
+      const spyEntityManagerQbFn = jest.spyOn(
+        mockEntityManager,
+        'createQueryBuilder',
+      );
+      spyEntityManagerQbFn.mockReturnValueOnce(qb);
+      const spyUpdateFn = jest.spyOn(qb, 'update');
+      const spySetFn = jest.spyOn(qb, 'set');
+      const spyWhereFn = jest.spyOn(qb, 'where');
+      const spyAndWhereFn = jest.spyOn(qb, 'andWhere');
+      const spyExecuteFn = jest.spyOn(qb, 'execute');
+      const spyCommentCreateFn = jest.spyOn(mockCommentRepository, 'create');
+      spyCommentCreateFn.mockReturnValueOnce(mockReplyComment);
+      const spyEntityManagerSaveFn = jest.spyOn(mockEntityManager, 'save');
+
+      // When
+      const result = await commentService.createComment(
+        postId,
+        user,
+        createCommentDtoWithParentId,
+      );
+
+      // Then
+      expect(result).toBeUndefined();
+      expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyDataSourceTransactionFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledWith({
+        id: createCommentDtoWithParentId.parentId,
+      });
+      expect(spyCommentSumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentSumFn).toHaveBeenCalledWith('childrenNum', {
+        group: mockParentComment.group,
+      });
+      expect(spyCommentMaximumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentMaximumFn).toHaveBeenCalledWith('depth', {
+        group: mockParentComment.group,
+      });
+      expect(spyEntityManagerQbFn).toHaveBeenCalledTimes(2);
+      expect(spyEntityManagerQbFn).toHaveBeenCalledWith();
+      expect(spyUpdateFn).toHaveBeenCalledTimes(1);
+      expect(spyUpdateFn).toHaveBeenCalledWith(Comment);
+      expect(spySetFn).toHaveBeenCalledTimes(1);
+      expect(spyWhereFn).toHaveBeenCalledTimes(1);
+      expect(spyWhereFn).toHaveBeenCalledWith('group = :group', {
+        group: mockParentComment.group,
+      });
+      expect(spyAndWhereFn).toHaveBeenCalledTimes(1);
+      expect(spyExecuteFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentCreateFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentCreateFn).toHaveBeenCalledWith({
+        content: createCommentDtoWithParentId.content,
+        group: mockParentComment.group,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
+        user,
+        post: mockPost,
+      });
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledTimes(2);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockParentComment);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockReplyComment);
+    });
+
+    it('SUCCESS: depth > maxDepth 대댓글을 정상적으로 생성한다.', async () => {
+      // Given
+      const mockMaxDepth = 1;
+      const resultSequence = mockParentComment.sequence + 1;
+      const mockReplyComment = {
+        content: 'test',
+        group: maxGroup + 1,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
+        user,
+        post: mockPost,
+      };
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyDataSourceTransactionFn = jest.spyOn(
+        mockDataSource,
+        'transaction',
+      );
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockResolvedValueOnce(mockParentComment);
+      const spyCommentSumFn = jest.spyOn(mockCommentRepository, 'sum');
+      spyCommentSumFn.mockResolvedValueOnce(mockChildrenNumSum);
+      const spyCommentMaximumFn = jest.spyOn(mockCommentRepository, 'maximum');
+      spyCommentMaximumFn.mockResolvedValueOnce(mockMaxDepth);
+      const qb = mockEntityManager.createQueryBuilder();
+      const spyEntityManagerQbFn = jest.spyOn(
+        mockEntityManager,
+        'createQueryBuilder',
+      );
+      spyEntityManagerQbFn.mockReturnValueOnce(qb);
+      const spyUpdateFn = jest.spyOn(qb, 'update');
+      const spySetFn = jest.spyOn(qb, 'set');
+      const spyWhereFn = jest.spyOn(qb, 'where');
+      const spyAndWhereFn = jest.spyOn(qb, 'andWhere');
+      const spyExecuteFn = jest.spyOn(qb, 'execute');
+      const spyCommentCreateFn = jest.spyOn(mockCommentRepository, 'create');
+      spyCommentCreateFn.mockReturnValueOnce(mockReplyComment);
+      const spyEntityManagerSaveFn = jest.spyOn(mockEntityManager, 'save');
+
+      // When
+      const result = await commentService.createComment(
+        postId,
+        user,
+        createCommentDtoWithParentId,
+      );
+
+      // Then
+      expect(result).toBeUndefined();
+      expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyDataSourceTransactionFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledWith({
+        id: createCommentDtoWithParentId.parentId,
+      });
+      expect(spyCommentSumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentSumFn).toHaveBeenCalledWith('childrenNum', {
+        group: mockParentComment.group,
+      });
+      expect(spyCommentMaximumFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentMaximumFn).toHaveBeenCalledWith('depth', {
+        group: mockParentComment.group,
+      });
+      expect(spyEntityManagerQbFn).toHaveBeenCalledTimes(2);
+      expect(spyEntityManagerQbFn).toHaveBeenCalledWith();
+      expect(spyUpdateFn).toHaveBeenCalledTimes(1);
+      expect(spyUpdateFn).toHaveBeenCalledWith(Comment);
+      expect(spySetFn).toHaveBeenCalledTimes(1);
+      expect(spyWhereFn).toHaveBeenCalledTimes(1);
+      expect(spyWhereFn).toHaveBeenCalledWith('group = :group', {
+        group: mockParentComment.group,
+      });
+      expect(spyAndWhereFn).toHaveBeenCalledTimes(1);
+      expect(spyExecuteFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentCreateFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentCreateFn).toHaveBeenCalledWith({
+        content: createCommentDtoWithParentId.content,
+        group: mockParentComment.group,
+        sequence: resultSequence,
+        depth: mockParentComment.depth + 1,
+        user,
+        post: mockPost,
+      });
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledTimes(2);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockParentComment);
+      expect(spyEntityManagerSaveFn).toHaveBeenCalledWith(mockReplyComment);
     });
 
     it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
