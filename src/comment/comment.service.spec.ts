@@ -1,4 +1,8 @@
-import { HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -14,6 +18,7 @@ describe('CommentService', () => {
     create: jest.fn(),
     maximum: jest.fn(),
     sum: jest.fn(),
+    findAndCount: jest.fn(),
   };
   const mockPostRepository = {
     findOneBy: jest.fn(),
@@ -453,6 +458,158 @@ describe('CommentService', () => {
           error: 'Not Found',
           message: 'NOT_FOUND_COMMENT',
           statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('getComments()', () => {
+    const postId = 1;
+    const userId = 1;
+    const pageRequestDto = {
+      pageNo: 1,
+      getOffset: function (): number {
+        return 0;
+      },
+      getLimit: function (): number {
+        return 10;
+      },
+    };
+    const mockPost = {
+      id: 1,
+      title: '치킨',
+      content: 'test',
+      viewCount: 1,
+      createdAt: new Date(),
+      user: {
+        id: 1,
+        nickname: '사과',
+      },
+    };
+    const mockComments = [
+      {
+        id: 1,
+        sequence: 1,
+        content: 'test',
+        group: 1,
+        depth: 1,
+        user: {
+          id: userId,
+          nickname: 'test',
+        },
+        isMyComment: true,
+      },
+    ];
+    const mockCommentsCount = 1;
+
+    it('SUCCESS: 댓글을 정상적으로 조회한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindAndCountFn = jest.spyOn(
+        mockCommentRepository,
+        'findAndCount',
+      );
+      spyCommentFindAndCountFn.mockReturnValueOnce([
+        mockComments,
+        mockCommentsCount,
+      ]);
+
+      const expectedResult = {
+        currentPage: pageRequestDto.pageNo,
+        items: mockComments,
+        pageSize: pageRequestDto.getLimit(),
+        totalCount: mockCommentsCount,
+        totalPage: Math.ceil(mockCommentsCount / pageRequestDto.getLimit()),
+      };
+
+      // When
+      const result = await commentService.getComments(
+        postId,
+        pageRequestDto,
+        userId,
+      );
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyCommentFindAndCountFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindAndCountFn).toHaveBeenCalledWith({
+        where: {
+          post: { id: postId },
+        },
+        relations: { user: true },
+        order: {
+          group: 'ASC',
+          sequence: 'ASC',
+        },
+        take: pageRequestDto.getLimit(),
+        skip: pageRequestDto.getOffset(),
+      });
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.getComments(postId, pageRequestDto, userId);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+
+    it('FAILURE: 최대 페이지를 넘어가면 Bad Request Exception을 반환한다.', async () => {
+      // Given
+      const pageRequestDto = {
+        pageNo: 2,
+        getOffset: function (): number {
+          return 0;
+        },
+        getLimit: function (): number {
+          return 10;
+        },
+      };
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindAndCountFn = jest.spyOn(
+        mockCommentRepository,
+        'findAndCount',
+      );
+      spyCommentFindAndCountFn.mockReturnValueOnce([
+        mockComments,
+        mockCommentsCount,
+      ]);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.getComments(postId, pageRequestDto, userId);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect(error.getStatus()).toEqual(HttpStatus.BAD_REQUEST);
+        expect(error.getResponse()).toEqual({
+          error: 'Bad Request',
+          message: 'PAGE_OUT_OF_RANGE',
+          statusCode: 400,
         });
       }
       expect(hasThrown).toBeTruthy();
