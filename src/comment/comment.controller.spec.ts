@@ -8,6 +8,7 @@ describe('CommentController', () => {
   const mockCommentService = {
     createComment: jest.fn(),
     getComments: jest.fn(),
+    updateComment: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -140,6 +141,49 @@ describe('CommentController', () => {
         postId,
         pageRequestDto,
         user.id,
+      );
+    });
+  });
+
+  describe('updateComment()', () => {
+    const postId = 1;
+    const commentId = 1;
+    const user = {
+      id: 1,
+      email: 'test@email',
+      nickname: 'test',
+      password: '$2b$10$Tuip8DXQlXtBaTVJvpvZ0eIfrxkXktGTSF4ew4HSdvWD7MRF.gykO',
+    };
+    const updateCommentDto = { content: 'test2' };
+
+    it('SUCCESS: 코멘트 서비스를 정상적으로 호출한다.', async () => {
+      // Given
+      const spyUpdateCommentFn = jest.spyOn(
+        mockCommentService,
+        'updateComment',
+      );
+
+      const expectedResult = {
+        message: 'UPDATE_SUCCESS',
+        statusCode: 200,
+      };
+
+      // When
+      const result = await commentController.updateComment(
+        postId,
+        commentId,
+        user,
+        updateCommentDto,
+      );
+
+      // Then
+      expect(result).toEqual(expectedResult);
+      expect(spyUpdateCommentFn).toHaveBeenCalledTimes(1);
+      expect(spyUpdateCommentFn).toHaveBeenCalledWith(
+        postId,
+        commentId,
+        user.id,
+        updateCommentDto,
       );
     });
   });
