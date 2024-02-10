@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { User } from '../entity/user.entity';
 import { CommentService } from './comment.service';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('/posts/:postId/comments')
 export class CommentController {
@@ -49,5 +51,22 @@ export class CommentController {
     return CommonResponseDto.success<PageResponseDto<CommentResponseDto>>(
       ResponseMessage.READ_SUCCESS,
     ).setData(result);
+  }
+
+  @Patch('/:commentId')
+  async updateComment(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @GetUser() user: User,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ): Promise<CommonResponseDto<void>> {
+    await this.commentService.updateComment(
+      postId,
+      commentId,
+      user.id,
+      updateCommentDto,
+    );
+
+    return CommonResponseDto.success(ResponseMessage.UPDATE_SUCCESS);
   }
 }
