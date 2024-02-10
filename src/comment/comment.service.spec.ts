@@ -29,6 +29,8 @@ describe('CommentService', () => {
     delete: jest.fn(),
     createQueryBuilder: jest.fn(() => ({
       update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
       set: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -512,7 +514,7 @@ describe('CommentService', () => {
         mockCommentRepository,
         'findAndCount',
       );
-      spyCommentFindAndCountFn.mockReturnValueOnce([
+      spyCommentFindAndCountFn.mockResolvedValueOnce([
         mockComments,
         mockCommentsCount,
       ]);
@@ -654,7 +656,7 @@ describe('CommentService', () => {
         mockCommentRepository,
         'findOneBy',
       );
-      spyCommentFindOneByFn.mockReturnValueOnce(mockComment);
+      spyCommentFindOneByFn.mockResolvedValueOnce(mockComment);
       const spyCommentSaveFn = jest.spyOn(mockCommentRepository, 'save');
 
       // When
@@ -719,7 +721,7 @@ describe('CommentService', () => {
         mockCommentRepository,
         'findOneBy',
       );
-      spyCommentFindOneByFn.mockReturnValueOnce(null);
+      spyCommentFindOneByFn.mockResolvedValueOnce(null);
 
       // When
       let hasThrown = false;
@@ -730,6 +732,157 @@ describe('CommentService', () => {
           userId,
           updateCommentDto,
         );
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_COMMENT',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+  });
+
+  describe('deleteComment()', () => {
+    const postId = 1;
+    const userId = 1;
+    const commentId = 1;
+    const mockPost = {
+      id: 1,
+      title: '치킨',
+      content: 'test',
+      viewCount: 1,
+      createdAt: new Date(),
+      user: {
+        id: 1,
+        nickname: '사과',
+      },
+    };
+    const mockComment = {
+      id: 1,
+      sequence: 1,
+      content: 'test',
+      group: 1,
+      depth: 1,
+      childrenNum: 1,
+      user: {
+        id: userId,
+        nickname: 'test',
+      },
+      isMyComment: true,
+    };
+
+    it('SUCCESS: 댓글을 정상적으로 삭제한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockResolvedValueOnce(mockComment);
+      const spyEntityManagerQbFn = jest.spyOn(
+        mockEntityManager,
+        'createQueryBuilder',
+      );
+      const qb = mockEntityManager.createQueryBuilder();
+      spyEntityManagerQbFn.mockReturnValue(qb);
+      const spyDeleteFn = jest.spyOn(qb, 'delete');
+      const spyFromFn = jest.spyOn(qb, 'from');
+      const spyWhereFn = jest.spyOn(qb, 'where');
+      const spyAndWhereFn = jest.spyOn(qb, 'andWhere');
+      const spyExecuteFn = jest.spyOn(qb, 'execute');
+      const spyUpdateFn = jest.spyOn(qb, 'update');
+      const spySetFn = jest.spyOn(qb, 'set');
+
+      // When
+      const result = await commentService.deleteComment(
+        postId,
+        commentId,
+        userId,
+      );
+
+      // Then
+      expect(result).toBeUndefined();
+      expect(spyPostFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyPostFindOneByFn).toHaveBeenCalledWith({ id: postId });
+      expect(spyCommentFindOneByFn).toHaveBeenCalledTimes(1);
+      expect(spyCommentFindOneByFn).toHaveBeenCalledWith({
+        post: { id: postId },
+        user: { id: userId },
+        id: commentId,
+      });
+      expect(spyEntityManagerQbFn).toHaveBeenCalledTimes(3);
+      expect(spyDeleteFn).toHaveBeenCalledTimes(1);
+      expect(spyDeleteFn).toHaveBeenCalledWith();
+      expect(spyFromFn).toHaveBeenCalledTimes(1);
+      expect(spyFromFn).toHaveBeenCalledWith(Comment);
+      expect(spyWhereFn).toHaveBeenCalledTimes(2);
+      expect(spyWhereFn).toHaveBeenCalledWith('sequence > :minSequence', {
+        minSequence: mockComment.sequence - 1,
+      });
+      expect(spyWhereFn).toHaveBeenCalledWith('group = :group', {
+        group: mockComment.group,
+      });
+      expect(spyAndWhereFn).toHaveBeenCalledTimes(3);
+      expect(spyAndWhereFn).toHaveBeenCalledWith('sequence < :maxSequence', {
+        maxSequence: mockComment.sequence + mockComment.childrenNum + 1,
+      });
+      expect(spyAndWhereFn).toHaveBeenCalledWith('group = :group', {
+        group: mockComment.group,
+      });
+      expect(spyAndWhereFn).toHaveBeenCalledWith('sequence > :sequence', {
+        sequence: mockComment.sequence,
+      });
+      expect(spyExecuteFn).toHaveBeenCalledTimes(2);
+      expect(spyUpdateFn).toHaveBeenCalledTimes(1);
+      expect(spyUpdateFn).toHaveBeenCalledWith(Comment);
+      expect(spySetFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('FAILURE: 글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.deleteComment(postId, commentId, userId);
+
+        // Then
+      } catch (error) {
+        hasThrown = true;
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toEqual(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          error: 'Not Found',
+          message: 'NOT_FOUND_POST',
+          statusCode: 404,
+        });
+      }
+      expect(hasThrown).toBeTruthy();
+    });
+
+    it('FAILURE: 댓글이 존재하지 않으면 Not Found Exception을 반환한다.', async () => {
+      // Given
+      const spyPostFindOneByFn = jest.spyOn(mockPostRepository, 'findOneBy');
+      spyPostFindOneByFn.mockResolvedValueOnce(mockPost);
+      const spyCommentFindOneByFn = jest.spyOn(
+        mockCommentRepository,
+        'findOneBy',
+      );
+      spyCommentFindOneByFn.mockResolvedValueOnce(null);
+
+      // When
+      let hasThrown = false;
+      try {
+        await commentService.deleteComment(postId, commentId, userId);
 
         // Then
       } catch (error) {
