@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { PageRequestDto } from '../common/dto/page-request.dto';
+import { PageResponseDto } from '../common/dto/page-response.dto';
 import { Comment } from '../entity/comment.entity';
 import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
+import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
@@ -68,6 +75,47 @@ export class CommentService {
 
       await entityManager.save(comment);
     });
+  }
+
+  async getComments(
+    postId: number,
+    pageRequestDto: PageRequestDto,
+    userId: number,
+  ): Promise<PageResponseDto<CommentResponseDto>> {
+    const foundPost = await this.postRepository.findOneBy({ id: postId });
+    if (!foundPost) throw new NotFoundException('NOT_FOUND_POST');
+
+    const limit = pageRequestDto.getLimit();
+    const offset = pageRequestDto.getOffset();
+    const [foundComments, foundCommentsCount] =
+      await this.commentRepository.findAndCount({
+        where: {
+          post: { id: postId },
+        },
+        relations: { user: true },
+        order: {
+          group: 'ASC',
+          sequence: 'ASC',
+        },
+        take: limit,
+        skip: offset,
+      });
+
+    const foundReviewsTotalPage = Math.ceil(foundCommentsCount / limit);
+    const currentPage = pageRequestDto.pageNo;
+    if (foundReviewsTotalPage < currentPage)
+      throw new BadRequestException('PAGE_OUT_OF_RANGE');
+
+    const commentResponseDtos = foundComments.map(
+      (comment) => new CommentResponseDto(comment, userId),
+    );
+
+    return new PageResponseDto(
+      currentPage,
+      foundCommentsCount,
+      limit,
+      commentResponseDtos,
+    );
   }
 
   private async getSequenceAndUpdate(
