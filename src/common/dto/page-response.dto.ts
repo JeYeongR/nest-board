@@ -15,7 +15,7 @@ export class PageResponseDto<T> {
     pageSize: number,
     items: T[],
   ) {
-    this.currentPage = currentPage;
+    this.currentPage = currentPage ?? 1;
     this.totalCount = totalCount;
     this.pageSize = pageSize;
     this.totalPage = Math.ceil(totalCount / pageSize);
